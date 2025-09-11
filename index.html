@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CVW Dashboard - Zambia</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CVW Dashboard - Zambia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -603,7 +604,7 @@
     apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
     authDomain: "cvw-dashboard-zambia.firebaseapp.com",
     projectId: "cvw-dashboard-zambia",
-    storageBucket: "cvw-dashboard-zambia.firebasestorage.app",
+    storageBucket: "cvw-dashboard-zambia.appspot.com",
     messagingSenderId: "905368303709",
     appId: "1:905368303709:web:e71f7abc063e78224b35b4"
   };
@@ -614,696 +615,692 @@
 </script>
 </head>
 <body>
-
-    <!-- Admin Panel (hidden for non-admins) -->
-    <div id="adminPanel" style="display:none;">
-        <h2>Admin Panel</h2>
-        <button onclick="openAddUserModal()">Add User</button>
-        <button id="manageAgenciesBtn" onclick="openAgencyModal()">Manage Agencies</button>
-    </div>
-    
-    <!-- Login Screen -->
-    <div id="loginScreen" class="login-screen">
-        <h1 class="login-title">📊 CVW Dashboard</h1>
-        <p class="login-subtitle">Zambia Child Victim & Witness Analytics</p>
-        
-        <div id="loginError" class="notification error" style="position: static; display: none; margin-bottom: 20px;">
+<!-- Admin Panel (hidden for non-admins) -->
+<div id="adminPanel" style="display:none;">
+<h2>Admin Panel</h2>
+<button onclick="openAddUserModal()">Add User</button>
+<button id="manageAgenciesBtn" onclick="openAgencyModal()">Manage Agencies</button>
+</div>
+<!-- Login Screen -->
+<div class="login-screen" id="loginScreen">
+<h1 class="login-title">📊 CVW Dashboard</h1>
+<p class="login-subtitle">Zambia Child Victim &amp; Witness Analytics</p>
+<div class="notification error" id="loginError" style="position: static; display: none; margin-bottom: 20px;">
             Invalid credentials
         </div>
-        
-        <div id="loginForm">
-            <div class="form-group">
-                <input type="text" id="username" class="form-input" placeholder="Username" required>
-            </div>
-            <div class="form-group">
-                <input type="password" id="password" class="form-input" placeholder="Password" required>
-            </div>
-            <button type="button" class="btn btn-primary" onclick="handleLogin()">🚀 Login</button>
-        </div>
-        
-        <div class="demo-accounts">
-            <h3 style="margin-bottom: 15px; color: #2c3e50;">Demo Accounts</h3>
-            <div class="account-row">
-                <span><strong>Admin:</strong> admin / admin123</span>
-                <button class="btn btn-sm btn-success" onclick="fillLogin('admin', 'admin123')">Fill</button>
-            </div>
-            <div class="account-row">
-                <span><strong>Viewer:</strong> viewer / view123</span>
-                <button class="btn btn-sm btn-info" onclick="fillLogin('viewer', 'view123')">Fill</button>
-            </div>
-            <div class="account-row">
-                <span><strong>General Reporter:</strong> reporter / report123</span>
-                <button class="btn btn-sm btn-warning" onclick="fillLogin('reporter', 'report123')">Fill</button>
-            </div>
-            <div class="account-row">
-                <span><strong>NPA Reporter:</strong> npa_reporter / npa_reporter</span>
-                <button class="btn btn-sm" style="background: #6f42c1; color: white;" onclick="fillLogin('npa_reporter', 'npa_reporter')">Fill</button>
-            </div>
-            <div class="account-row">
-                <span><strong>MOH Reporter:</strong> moh_reporter / moh_reporter</span>
-                <button class="btn btn-sm" style="background: #e83e8c; color: white;" onclick="fillLogin('moh_reporter', 'moh_reporter')">Fill</button>
-            </div>
-            <div class="account-row">
-                <span><strong>ZP Reporter:</strong> zp_reporter / zp_reporter</span>
-                <button class="btn btn-sm" style="background: #20c997; color: white;" onclick="fillLogin('zp_reporter', 'zp_reporter')">Fill</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Dashboard -->
-    <div id="mainDashboard" class="container hidden">
-        <!-- User Bar -->
-        <div class="user-bar">
-            <div class="user-info">
-                <div id="userAvatar" class="user-avatar">A</div>
-                <div>
-                    <div id="userName" style="font-weight: 600; color: #2c3e50;">Administrator</div>
-                    <div id="userRole" style="font-size: 0.9rem; color: #7f8c8d;">Admin Account</div>
-                </div>
-            </div>
-            <button class="btn" onclick="logout()" style="background: #dc3545; color: white;">🚪 Logout</button>
-        </div>
-
-        <!-- Header -->
-        <div class="dashboard">
-            <div class="header">
-                <h1>📊 CVW Analytics Dashboard</h1>
-                <p style="font-size: 1.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;">ZAMBIA</p>
-                <p class="subtitle">Child Victim & Witness Case Management System</p>
-            </div>
-        </div>
-
-        <!-- Dashboard Controls Section (Admin Only) -->
-        <div id="dashboardControlsSection" class="section">
-            <div class="section-header">🎛️ Dashboard Controls</div>
-            <div class="section-content">
-                <div class="action-grid">
-                    <button class="btn btn-success" onclick="openAddRecord()">➕ Add New Record</button>
-                    <button class="btn btn-info" onclick="toggleSearch()">🔍 Search Records</button>
-                    <button class="btn" style="background: #dc3545; color: white;" onclick="exportPDF()">📄 Export PDF</button>
-                    <button class="btn" style="background: #28a745; color: white;" onclick="exportCSV()">📊 Export CSV</button>
-                    <button class="btn" style="background: #6f42c1; color: white;" onclick="manageUsers()">👥 Manage Users</button>
-                    <button class="btn" style="background: #fd7e14; color: white;" onclick="manageAgencies()">🏢 Manage Agencies</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Export & Reports Section (Viewer Only) -->
-        <div id="exportReportsSection" class="section hidden">
-            <div class="section-header">📤 Export & Reports</div>
-            <div class="section-content">
-                <div class="action-grid">
-                    <button class="btn" style="background: #dc3545; color: white;" onclick="exportPDF()">📄 Export PDF</button>
-                    <button class="btn" style="background: #28a745; color: white;" onclick="exportCSV()">📊 Export CSV</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Search Section -->
-        <div id="searchSection" class="section hidden">
-            <div class="section-header">🔍 Case Search</div>
-            <div class="section-content">
-                <div class="search-box">
-                    <input type="text" id="searchInput" class="search-input" placeholder="Enter Case ID (e.g., NPA-CV1, MOH-CW5) or search by district, crime type">
-                    <button class="btn btn-primary" onclick="searchRecords()">Search</button>
-                    <button class="btn" onclick="clearSearch()" style="background: #6c757d; color: white;">Clear</button>
-                </div>
-                <div id="searchResults" class="search-results"></div>
-            </div>
-        </div>
-
-        <!-- Add New Record Modal -->
-        <div id="addRecordModal" class="modal-overlay" style="display: none;">
-            <div class="modal-container" style="max-width: 900px;">
-                <div class="modal-header">
-                    <h2>Add New Case Record</h2>
-                    <button class="modal-close" onclick="closeAddRecordModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="success-message" id="successMessage" style="background: #d1fae5; color: #059669; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10b981; display: none;">
+<div id="loginForm">
+<div class="form-group">
+<input class="form-input" id="username" placeholder="Username" required="" type="text"/>
+</div>
+<div class="form-group">
+<input class="form-input" id="password" placeholder="Password" required="" type="password"/>
+</div>
+<button class="btn btn-primary" onclick="handleLogin()" type="button">🚀 Login</button>
+</div>
+<div class="demo-accounts">
+<h3 style="margin-bottom: 15px; color: #2c3e50;">Demo Accounts</h3>
+<div class="account-row">
+<span><strong>Admin:</strong> admin / admin123</span>
+<button class="btn btn-sm btn-success" onclick="fillLogin('admin', 'admin123')">Fill</button>
+</div>
+<div class="account-row">
+<span><strong>Viewer:</strong> viewer / view123</span>
+<button class="btn btn-sm btn-info" onclick="fillLogin('viewer', 'view123')">Fill</button>
+</div>
+<div class="account-row">
+<span><strong>General Reporter:</strong> reporter / report123</span>
+<button class="btn btn-sm btn-warning" onclick="fillLogin('reporter', 'report123')">Fill</button>
+</div>
+<div class="account-row">
+<span><strong>NPA Reporter:</strong> npa_reporter / npa_reporter</span>
+<button class="btn btn-sm" onclick="fillLogin('npa_reporter', 'npa_reporter')" style="background: #6f42c1; color: white;">Fill</button>
+</div>
+<div class="account-row">
+<span><strong>MOH Reporter:</strong> moh_reporter / moh_reporter</span>
+<button class="btn btn-sm" onclick="fillLogin('moh_reporter', 'moh_reporter')" style="background: #e83e8c; color: white;">Fill</button>
+</div>
+<div class="account-row">
+<span><strong>ZP Reporter:</strong> zp_reporter / zp_reporter</span>
+<button class="btn btn-sm" onclick="fillLogin('zp_reporter', 'zp_reporter')" style="background: #20c997; color: white;">Fill</button>
+</div>
+</div>
+</div>
+<!-- Main Dashboard -->
+<div class="container hidden" id="mainDashboard">
+<!-- User Bar -->
+<div class="user-bar">
+<div class="user-info">
+<div class="user-avatar" id="userAvatar">A</div>
+<div>
+<div id="userName" style="font-weight: 600; color: #2c3e50;">Administrator</div>
+<div id="userRole" style="font-size: 0.9rem; color: #7f8c8d;">Admin Account</div>
+</div>
+</div>
+<button class="btn" onclick="logout()" style="background: #dc3545; color: white;">🚪 Logout</button>
+</div>
+<!-- Header -->
+<div class="dashboard">
+<div class="header">
+<h1>📊 CVW Analytics Dashboard</h1>
+<p style="font-size: 1.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;">ZAMBIA</p>
+<p class="subtitle">Child Victim &amp; Witness Case Management System</p>
+</div>
+</div>
+<!-- Dashboard Controls Section (Admin Only) -->
+<div class="section" id="dashboardControlsSection">
+<div class="section-header">🎛️ Dashboard Controls</div>
+<div class="section-content">
+<div class="action-grid">
+<button class="btn btn-success" onclick="openAddRecord()">➕ Add New Record</button>
+<button class="btn btn-info" onclick="toggleSearch()">🔍 Search Records</button>
+<button class="btn" onclick="exportPDF()" style="background: #dc3545; color: white;">📄 Export PDF</button>
+<button class="btn" onclick="exportCSV()" style="background: #28a745; color: white;">📊 Export CSV</button>
+<button class="btn" onclick="manageUsers()" style="background: #6f42c1; color: white;">👥 Manage Users</button>
+<button class="btn" onclick="manageAgencies()" style="background: #fd7e14; color: white;">🏢 Manage Agencies</button>
+</div>
+</div>
+</div>
+<!-- Export & Reports Section (Viewer Only) -->
+<div class="section hidden" id="exportReportsSection">
+<div class="section-header">📤 Export &amp; Reports</div>
+<div class="section-content">
+<div class="action-grid">
+<button class="btn" onclick="exportPDF()" style="background: #dc3545; color: white;">📄 Export PDF</button>
+<button class="btn" onclick="exportCSV()" style="background: #28a745; color: white;">📊 Export CSV</button>
+</div>
+</div>
+</div>
+<!-- Search Section -->
+<div class="section hidden" id="searchSection">
+<div class="section-header">🔍 Case Search</div>
+<div class="section-content">
+<div class="search-box">
+<input class="search-input" id="searchInput" placeholder="Enter Case ID (e.g., NPA-CV1, MOH-CW5) or search by district, crime type" type="text"/>
+<button class="btn btn-primary" onclick="searchRecords()">Search</button>
+<button class="btn" onclick="clearSearch()" style="background: #6c757d; color: white;">Clear</button>
+</div>
+<div class="search-results" id="searchResults"></div>
+</div>
+</div>
+<!-- Add New Record Modal -->
+<div class="modal-overlay" id="addRecordModal" style="display: none;">
+<div class="modal-container" style="max-width: 900px;">
+<div class="modal-header">
+<h2>Add New Case Record</h2>
+<button class="modal-close" onclick="closeAddRecordModal()">×</button>
+</div>
+<div class="modal-body">
+<div class="success-message" id="successMessage" style="background: #d1fae5; color: #059669; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #10b981; display: none;">
                         Record added successfully!
                     </div>
-                    
-                    <div class="error-message" id="errorMessage" style="background: #fee2e2; color: #dc2626; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ef4444; display: none;">
+<div class="error-message" id="errorMessage" style="background: #fee2e2; color: #dc2626; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ef4444; display: none;">
                         Please fill in all required fields.
                     </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Case ID</label>
-                            <input type="text" id="modalCaseId" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" placeholder="Auto-generated if empty" readonly>
-                            <small style="color: #666; margin-top: 5px; display: block;">Will be auto-generated based on record type</small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Record Type *</label>
-                            <select id="modalRecordType" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" required onchange="generateModalCaseId()">
-                                <option value="">Select Type</option>
-                                <option value="Victim">Victim</option>
-                                <option value="Witness">Witness</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Date Reported *</label>
-                            <input type="date" id="modalDateReported" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">District *</label>
-                            <select id="modalDistrict" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" required>
-                                <option value="">Select District</option>
-                                <option value="Lusaka">Lusaka</option>
-                                <option value="Kitwe">Kitwe</option>
-                                <option value="Ndola">Ndola</option>
-                                <option value="Kabwe">Kabwe</option>
-                                <option value="Chingola">Chingola</option>
-                                <option value="Mufulira">Mufulira</option>
-                                <option value="Livingstone">Livingstone</option>
-                                <option value="Luanshya">Luanshya</option>
-                                <option value="Kasama">Kasama</option>
-                                <option value="Chipata">Chipata</option>
-                                <option value="Katete">Katete</option>
-                                <option value="Solwezi">Solwezi</option>
-                                <option value="Mongu">Mongu</option>
-                                <option value="Mazabuka">Mazabuka</option>
-                                <option value="Monze">Monze</option>
-                                <option value="Mansa">Mansa</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">CVW Gender *</label>
-                            <select id="modalCvwGender" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" required>
-                                <option value="">Select Gender</option>
-                                <option value="MALE">Male</option>
-                                <option value="FEMALE">Female</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Enhanced CVW Age Input with Years/Months -->
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">CVW Age *</label>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <input type="number" id="modalCvwAge" style="flex: 2; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" min="0" max="120" placeholder="Enter age" required>
-                                <select id="modalAgeUnit" style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" required>
-                                    <option value="">Select Unit</option>
-                                    <option value="years">Years</option>
-                                    <option value="months">Months</option>
-                                </select>
-                            </div>
-                            <small style="color: #666; font-size: 0.8rem; margin-top: 5px; font-style: italic; display: block;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Case ID</label>
+<input id="modalCaseId" placeholder="Auto-generated if empty" readonly="" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="text"/>
+<small style="color: #666; margin-top: 5px; display: block;">Will be auto-generated based on record type</small>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Record Type *</label>
+<select id="modalRecordType" onchange="generateModalCaseId()" required="" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Type</option>
+<option value="Victim">Victim</option>
+<option value="Witness">Witness</option>
+</select>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Date Reported *</label>
+<input id="modalDateReported" required="" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="date"/>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">District *</label>
+<select id="modalDistrict" required="" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select District</option>
+<option value="Lusaka">Lusaka</option>
+<option value="Kitwe">Kitwe</option>
+<option value="Ndola">Ndola</option>
+<option value="Kabwe">Kabwe</option>
+<option value="Chingola">Chingola</option>
+<option value="Mufulira">Mufulira</option>
+<option value="Livingstone">Livingstone</option>
+<option value="Luanshya">Luanshya</option>
+<option value="Kasama">Kasama</option>
+<option value="Chipata">Chipata</option>
+<option value="Katete">Katete</option>
+<option value="Solwezi">Solwezi</option>
+<option value="Mongu">Mongu</option>
+<option value="Mazabuka">Mazabuka</option>
+<option value="Monze">Monze</option>
+<option value="Mansa">Mansa</option>
+</select>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">CVW Gender *</label>
+<select id="modalCvwGender" required="" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Gender</option>
+<option value="MALE">Male</option>
+<option value="FEMALE">Female</option>
+</select>
+</div>
+<!-- Enhanced CVW Age Input with Years/Months -->
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">CVW Age *</label>
+<div style="display: flex; gap: 10px; align-items: center;">
+<input id="modalCvwAge" max="120" min="0" placeholder="Enter age" required="" style="flex: 2; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="number"/>
+<select id="modalAgeUnit" required="" style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Unit</option>
+<option value="years">Years</option>
+<option value="months">Months</option>
+</select>
+</div>
+<small style="color: #666; font-size: 0.8rem; margin-top: 5px; font-style: italic; display: block;">
                                 Select <strong>months</strong> for infants under 1 year, <strong>years</strong> for children 1+ years old
                             </small>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Offender Gender</label>
-                            <select id="modalOffenderGender" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                                <option value="">Select Gender</option>
-                                <option value="MALE">Male</option>
-                                <option value="FEMALE">Female</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Offender Age</label>
-                            <input type="number" id="modalOffenderAge" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" min="0" placeholder="Offender Age">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Crime Type *</label>
-                            <select id="modalCrimeType" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" required>
-                                <option value="">Select Crime Type</option>
-                                <option value="ASSAULT ON A CHILD">Assault on a Child</option>
-                                <option value="PHYSICAL ABUSE">Physical Abuse</option>
-                                <option value="SEXUAL ASSAULT">Sexual Assault</option>
-                                <option value="RAPE">Rape</option>
-                                <option value="CHILD NEGLECT">Child Neglect</option>
-                                <option value="DEFILEMENT">Defilement</option>
-                                <option value="ONLINE SEXUAL EXPLOITATION">Online Sexual Exploitation</option>
-                                <option value="TRAFFICKING">Trafficking</option>
-                                <option value="NEGLECT">Neglect</option>
-                                <option value="EXPLOITATION">Exploitation</option>
-                                <option value="DOMESTIC VIOLENCE">Domestic Violence</option>
-                                <option value="OTHER">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Disability</label>
-                            <select id="modalDisability" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                                <option value="NON">None</option>
-                                <option value="PHYSICAL">Physical</option>
-                                <option value="MENTAL">Mental</option>
-                                <option value="MENTAL+PHYSICAL">Mental + Physical</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Services Rendered</label>
-                            <select id="modalServicesRendered" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                                <option value="">Select Services</option>
-                                <option value="MEDICAL REPORT">Medical Report</option>
-                                <option value="COUNSELLING">Counselling</option>
-                                <option value="LEGAL AID">Legal Aid</option>
-                                <option value="PSYCHOSOCIAL SUPPORT">Psychosocial Support</option>
-                                <option value="SHELTER">Shelter</option>
-                                <option value="MEDICAL + COUNSELLING">Medical + Counselling</option>
-                                <option value="LEGAL + COUNSELLING">Legal + Counselling</option>
-                                <option value="REFERRAL">Referral</option>
-                                <option value="FOLLOW-UP">Follow-up</option>
-                                <option value="REHABILITATION">Rehabilitation</option>
-                                <option value="FAMILY SUPPORT">Family Support</option>
-                                <option value="EMERGENCY CARE">Emergency Care</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Relationship to CV</label>
-                            <select id="modalRelationshipToCv" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                                <option value="">Select Relationship</option>
-                                <option value="STRANGER">Stranger</option>
-                                <option value="FRIEND">Friend</option>
-                                <option value="FATHER">Father</option>
-                                <option value="MOTHER">Mother</option>
-                                <option value="LANDLORD">Landlord</option>
-                                <option value="NEIGHBOR">Neighbor</option>
-                                <option value="RELATIVE">Relative</option>
-                                <option value="TEACHER">Teacher</option>
-                                <option value="CAREGIVER">Caregiver</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group" style="margin-top: 20px;">
-                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Additional Notes (Optional)</label>
-                        <textarea id="modalAdditionalNotes" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" rows="3" placeholder="Any additional information about the case..."></textarea>
-                    </div>
-                </div>
-                <div style="padding: 20px 30px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 15px;">
-                    <button type="button" class="btn" onclick="closeAddRecordModal()" style="background: #6c757d; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveNewRecord()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;">Save Record</button>
-                </div>
-            </div>
-        </div>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Offender Gender</label>
+<select id="modalOffenderGender" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Gender</option>
+<option value="MALE">Male</option>
+<option value="FEMALE">Female</option>
+</select>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Offender Age</label>
+<input id="modalOffenderAge" min="0" placeholder="Offender Age" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="number"/>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Crime Type *</label>
+<select id="modalCrimeType" required="" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Crime Type</option>
+<option value="ASSAULT ON A CHILD">Assault on a Child</option>
+<option value="PHYSICAL ABUSE">Physical Abuse</option>
+<option value="SEXUAL ASSAULT">Sexual Assault</option>
+<option value="RAPE">Rape</option>
+<option value="CHILD NEGLECT">Child Neglect</option>
+<option value="DEFILEMENT">Defilement</option>
+<option value="ONLINE SEXUAL EXPLOITATION">Online Sexual Exploitation</option>
+<option value="TRAFFICKING">Trafficking</option>
+<option value="NEGLECT">Neglect</option>
+<option value="EXPLOITATION">Exploitation</option>
+<option value="DOMESTIC VIOLENCE">Domestic Violence</option>
+<option value="OTHER">Other</option>
+</select>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Disability</label>
+<select id="modalDisability" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="NON">None</option>
+<option value="PHYSICAL">Physical</option>
+<option value="MENTAL">Mental</option>
+<option value="MENTAL+PHYSICAL">Mental + Physical</option>
+</select>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Services Rendered</label>
+<select id="modalServicesRendered" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Services</option>
+<option value="MEDICAL REPORT">Medical Report</option>
+<option value="COUNSELLING">Counselling</option>
+<option value="LEGAL AID">Legal Aid</option>
+<option value="PSYCHOSOCIAL SUPPORT">Psychosocial Support</option>
+<option value="SHELTER">Shelter</option>
+<option value="MEDICAL + COUNSELLING">Medical + Counselling</option>
+<option value="LEGAL + COUNSELLING">Legal + Counselling</option>
+<option value="REFERRAL">Referral</option>
+<option value="FOLLOW-UP">Follow-up</option>
+<option value="REHABILITATION">Rehabilitation</option>
+<option value="FAMILY SUPPORT">Family Support</option>
+<option value="EMERGENCY CARE">Emergency Care</option>
+</select>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Relationship to CV</label>
+<select id="modalRelationshipToCv" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Relationship</option>
+<option value="STRANGER">Stranger</option>
+<option value="FRIEND">Friend</option>
+<option value="FATHER">Father</option>
+<option value="MOTHER">Mother</option>
+<option value="LANDLORD">Landlord</option>
+<option value="NEIGHBOR">Neighbor</option>
+<option value="RELATIVE">Relative</option>
+<option value="TEACHER">Teacher</option>
+<option value="CAREGIVER">Caregiver</option>
+</select>
+</div>
+</div>
+<div class="form-group" style="margin-top: 20px;">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Additional Notes (Optional)</label>
+<textarea id="modalAdditionalNotes" placeholder="Any additional information about the case..." rows="3" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;"></textarea>
+</div>
+</div>
+<div style="padding: 20px 30px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 15px;">
+<button class="btn" onclick="closeAddRecordModal()" style="background: #6c757d; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;" type="button">Cancel</button>
+<button class="btn btn-primary" onclick="saveNewRecord()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;" type="button">Save Record</button>
+</div>
+</div>
+</div>
+<!-- Update Services Modal -->
+<div class="modal-overlay" id="updateServicesModal" style="display: none;">
+<div class="modal-container" style="max-width: 600px;">
+<div class="modal-header">
+<h2>Update Services</h2>
+<button class="modal-close" onclick="closeUpdateServicesModal()">×</button>
+</div>
+<div class="modal-body">
+<div class="statistics-summary" id="currentCaseInfo" style="margin-bottom: 20px;">
+<h4 style="margin-bottom: 15px; color: #2c3e50;">Case Information</h4>
+<div class="stats-row">
+<span class="stats-label">Case ID:</span>
+<span class="stats-value" id="updateCaseId">-</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Current Services:</span>
+<span class="stats-value" id="updateCurrentServices">-</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Your Agency:</span>
+<span class="stats-value" id="updateAgencyName">-</span>
+</div>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Additional Service to Add *</label>
+<select id="additionalService" required="" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Additional Service</option>
+<option value="MEDICAL REPORT">Medical Report</option>
+<option value="COUNSELLING">Counselling</option>
+<option value="LEGAL AID">Legal Aid</option>
+<option value="PSYCHOSOCIAL SUPPORT">Psychosocial Support</option>
+<option value="SHELTER">Shelter</option>
+<option value="REFERRAL">Referral</option>
+<option value="FOLLOW-UP">Follow-up</option>
+<option value="REHABILITATION">Rehabilitation</option>
+<option value="FAMILY SUPPORT">Family Support</option>
+<option value="EMERGENCY CARE">Emergency Care</option>
+</select>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Service Notes (Optional)</label>
+<textarea id="serviceNotes" placeholder="Additional details about the service provided..." rows="3" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;"></textarea>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Service Date *</label>
+<input id="serviceDate" required="" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="date"/>
+</div>
+</div>
+<div style="padding: 20px 30px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 15px;">
+<button class="btn" onclick="closeUpdateServicesModal()" style="background: #6c757d; color: white;" type="button">Cancel</button>
+<button class="btn btn-primary" onclick="saveUpdatedServices()" type="button">Update Services</button>
+</div>
+</div>
+</div>
+<!-- User Management Modal -->
+<div class="modal-overlay" id="userMgmtModal" style="display: none;">
+<div class="modal-container" style="max-width: 600px;">
+<div class="modal-header">
+<h2>👥 User Management</h2>
+<button class="modal-close" onclick="closeUserMgmtModal()">×</button>
+</div>
+<div class="modal-body">
+<div style="margin-bottom: 30px;">
+<h3 style="margin-bottom: 15px; color: #2c3e50;">Add New User</h3>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Username</label>
+<input id="newUsername" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="text"/>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Password</label>
+<input id="newPassword" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="password"/>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Role</label>
+<select id="newUserRole" onchange="toggleAgencySelection()" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">Select Role</option>
+<option value="admin">Admin</option>
+<option value="viewer">Viewer</option>
+<option value="reporter">Reporter</option>
+</select>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Full Name</label>
+<input id="newUserName" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="text"/>
+</div>
+</div>
+<div class="form-group" id="agencySelectionGroup" style="display: none;">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Agency (Optional for Reporters)</label>
+<select id="newUserAgency" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+<option value="">No specific agency (General Reporter)</option>
+</select>
+</div>
+<button class="btn btn-success" onclick="addNewUser()">+ Add User</button>
+</div>
+<div>
+<h3 style="margin-bottom: 15px; color: #2c3e50;">Existing Users</h3>
+<div id="usersList" style="max-height: 300px; overflow-y: auto;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Agency Management Modal -->
+<div class="modal-overlay" id="agencyModal" style="display: none;">
+<div class="modal-container" style="max-width: 700px;">
+<div class="modal-header">
+<h2>🏢 Manage Agencies</h2>
+<button class="modal-close" onclick="closeAgencyModal()">×</button>
+</div>
+<div class="modal-body">
+<div style="margin-bottom: 30px;">
+<h3 style="margin-bottom: 15px; color: #2c3e50;">Add New Agency</h3>
+<div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 15px; align-items: end;">
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Agency Code</label>
+<input id="newAgencyCode" maxlength="5" placeholder="e.g., EDU" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="text"/>
+</div>
+<div class="form-group">
+<label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Agency Name</label>
+<input id="newAgencyName" placeholder="e.g., Ministry of Education" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="text"/>
+</div>
+<button class="btn btn-success" onclick="addAgency()" style="height: 48px;">+ Add Agency</button>
+</div>
+</div>
+<div>
+<h3 style="margin-bottom: 15px; color: #2c3e50;">Current Agencies</h3>
+<div id="agencyList" style="max-height: 400px; overflow-y: auto;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Filters Section -->
+<div class="section" id="filtersSection">
+<div class="section-header">🔧 Data Filters</div>
+<div class="section-content">
+<div class="filters-grid">
+<div class="filter-group">
+<label class="filter-label">District</label>
+<select class="filter-select" id="districtFilter" onchange="applyFilters()">
+<option value="">All Districts</option>
+<option value="Lusaka">Lusaka</option>
+<option value="Ndola">Ndola</option>
+<option value="Kitwe">Kitwe</option>
+<option value="Livingstone">Livingstone</option>
+<option value="Katete">Katete</option>
+<option value="Kabwe">Kabwe</option>
+<option value="Chingola">Chingola</option>
+<option value="Mufulira">Mufulira</option>
+<option value="Luanshya">Luanshya</option>
+<option value="Kasama">Kasama</option>
+<option value="Chipata">Chipata</option>
+<option value="Solwezi">Solwezi</option>
+<option value="Mongu">Mongu</option>
+<option value="Mazabuka">Mazabuka</option>
+<option value="Monze">Monze</option>
+</select>
+</div>
+<div class="filter-group">
+<label class="filter-label">Record Type</label>
+<select class="filter-select" id="recordTypeFilter" onchange="applyFilters()">
+<option value="">All Types</option>
+<option value="Victim">Victim</option>
+<option value="Witness">Witness</option>
+</select>
+</div>
+<div class="filter-group">
+<label class="filter-label">Crime Type</label>
+<select class="filter-select" id="crimeTypeFilter" onchange="applyFilters()">
+<option value="">All Crime Types</option>
+<option value="RAPE">Rape</option>
+<option value="DEFILEMENT">Defilement</option>
+<option value="ASSAULT ON A CHILD">Assault on a Child</option>
+<option value="CHILD ABUSE">Child Abuse</option>
+<option value="TRAFFICKING">Trafficking</option>
+<option value="NEGLECT">Neglect</option>
+<option value="EXPLOITATION">Exploitation</option>
+<option value="DOMESTIC VIOLENCE">Domestic Violence</option>
+<option value="OTHER">Other</option>
+</select>
+</div>
+<div class="filter-group">
+<label class="filter-label">Gender</label>
+<select class="filter-select" id="genderFilter" onchange="applyFilters()">
+<option value="">All Genders</option>
+<option value="MALE">Male</option>
+<option value="FEMALE">Female</option>
+</select>
+</div>
+<div class="filter-group">
+<label class="filter-label">Age Range</label>
+<select class="filter-select" id="ageRangeFilter" onchange="applyFilters()">
+<option value="">All Ages</option>
+<option value="0-5">0-5 years</option>
+<option value="6-10">6-10 years</option>
+<option value="11-15">11-15 years</option>
+<option value="16-18">16-18 years</option>
+</select>
+</div>
+<div class="filter-group">
+<label class="filter-label">Date Range</label>
+<select class="filter-select" id="dateRangeFilter" onchange="applyFilters()">
+<option value="">All Dates</option>
+<option value="last7days">Last 7 days</option>
+<option value="last30days">Last 30 days</option>
+<option value="last3months">Last 3 months</option>
+<option value="last6months">Last 6 months</option>
+<option value="thisyear">This year</option>
+</select>
+</div>
+</div>
+<div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
+<button class="btn" onclick="resetFilters()" style="background: #ffc107; color: #000;">🔄 Reset All</button>
+<button class="btn" onclick="exportFilteredData()" style="background: #28a745; color: white;">📊 Export Filtered Data</button>
+</div>
+<!-- Filter Results Summary -->
+<div class="statistics-summary" id="filterSummary" style="margin-top: 20px; display: none;">
+<h4 style="margin-bottom: 15px; color: #2c3e50;">🎯 Filter Results</h4>
+<div class="stats-row">
+<span class="stats-label">Active Filters:</span>
+<span class="stats-value" id="activeFilters">None</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Records Shown:</span>
+<span class="stats-value" id="filteredCount">0</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Total Records:</span>
+<span class="stats-value" id="totalCount">0</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Agency Section (Reporter Only) -->
+<div class="section" id="agencySection">
+<div class="section-header">Agency Selection</div>
+<div class="section-content">
+<div class="agency-grid" id="agencyGridContainer">
+<!-- Dynamic agency cards will be populated here -->
+</div>
+</div>
+</div>
+<!-- Reporter Actions Section -->
+<div class="section hidden" id="reporterActionsSection">
+<div class="section-header">Reporter Actions</div>
+<div class="section-content">
+<div class="statistics-summary" id="selectedAgencyInfo" style="margin-bottom: 20px;">
+<div class="stats-row">
+<span class="stats-label">Selected Agency:</span>
+<span class="stats-value" id="currentAgencyName">Not Selected</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Agency Code:</span>
+<span class="stats-value" id="currentAgencyCode">N/A</span>
+</div>
+</div>
+<div class="action-grid">
+<button class="btn btn-success" id="reporterAddBtn" onclick="openAddRecord()">➕ Add New Record</button>
+<button class="btn btn-info" onclick="toggleSearch()">🔍 Search Records</button>
+</div>
+</div>
+</div>
+<!-- KPI Cards -->
+<div class="section" id="kpiSection">
+<div class="section-header">📊 Key Performance Indicators</div>
+<div class="section-content">
+<div class="kpi-grid">
+<div class="kpi-card">
+<div class="kpi-value" id="totalCases">6</div>
+<div class="kpi-label">Total Cases</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-value" id="victimCases">4</div>
+<div class="kpi-label">Victim Cases</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-value" id="witnessCases">2</div>
+<div class="kpi-label">Witness Cases</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-value" id="avgAge">10.5</div>
+<div class="kpi-label">Average Age</div>
+</div>
+</div>
+<!-- Statistics Summary -->
+<div class="statistics-summary">
+<h4 style="margin-bottom: 15px; color: #2c3e50;">📈 Summary Statistics</h4>
+<div class="stats-row">
+<span class="stats-label">Most Affected District:</span>
+<span class="stats-value" id="topDistrict">Lusaka</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Most Common Crime:</span>
+<span class="stats-value" id="topCrime">Rape</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Most Common Service:</span>
+<span class="stats-value" id="topService">Medical Report</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Female Cases:</span>
+<span class="stats-value" id="femaleCases">3 (50%)</span>
+</div>
+<div class="stats-row">
+<span class="stats-label">Male Cases:</span>
+<span class="stats-value" id="maleCases">3 (50%)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Charts -->
+<div class="section" id="chartsSection">
+<div class="section-header">📈 Analytics Charts</div>
+<div class="section-content">
+<div class="charts-grid">
+<div class="chart-card">
+<div class="chart-title">Cases by District</div>
+<div class="chart-canvas">
+<canvas id="districtChart"></canvas>
+</div>
+</div>
+<div class="chart-card">
+<div class="chart-title">Crime Types</div>
+<div class="chart-canvas">
+<canvas id="crimeChart"></canvas>
+</div>
+</div>
+<div class="chart-card">
+<div class="chart-title">Age Distribution</div>
+<div class="chart-canvas">
+<canvas id="ageChart"></canvas>
+</div>
+</div>
+<div class="chart-card">
+<div class="chart-title">Gender Distribution</div>
+<div class="chart-canvas">
+<canvas id="genderChart"></canvas>
+</div>
+</div>
+<div class="chart-card">
+<div class="chart-title">Cases Over Time</div>
+<div class="chart-canvas">
+<canvas id="timeChart"></canvas>
+</div>
+</div>
+<div class="chart-card">
+<div class="chart-title">Services Rendered</div>
+<div class="chart-canvas">
+<canvas id="servicesChart"></canvas>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Table -->
+<div class="section" id="tableSection">
+<div class="section-header">📋 Case Records</div>
+<div class="section-content">
+<div class="table-wrapper">
+<table class="data-table">
+<thead>
+<tr>
+<th>Case ID</th>
+<th>Type</th>
+<th>Date</th>
+<th>District</th>
+<th>Gender</th>
+<th>Age</th>
+<th>Crime Type</th>
+<th>Services</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="notification" id="notification"></div>
+<script>
+// === Persistence Helpers ===
+function saveRecordToFirestore(record) {
+  return db.collection("cases").doc(record['cvw code']).set(record)
+    .then(() => {
+      console.log("Saved to Firestore:", record['cvw code']);
+      // Also update localStorage
+      const stored = JSON.parse(localStorage.getItem("cases") || "[]");
+      stored.push(record);
+      localStorage.setItem("cases", JSON.stringify(stored));
+    })
+    .catch(err => {
+      console.error("Firestore save error", err);
+      showNotification("Failed to save record to Firebase: " + err.message, "error");
+    });
+}
 
-        <!-- Update Services Modal -->
-        <div id="updateServicesModal" class="modal-overlay" style="display: none;">
-            <div class="modal-container" style="max-width: 600px;">
-                <div class="modal-header">
-                    <h2>Update Services</h2>
-                    <button class="modal-close" onclick="closeUpdateServicesModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div id="currentCaseInfo" class="statistics-summary" style="margin-bottom: 20px;">
-                        <h4 style="margin-bottom: 15px; color: #2c3e50;">Case Information</h4>
-                        <div class="stats-row">
-                            <span class="stats-label">Case ID:</span>
-                            <span id="updateCaseId" class="stats-value">-</span>
-                        </div>
-                        <div class="stats-row">
-                            <span class="stats-label">Current Services:</span>
-                            <span id="updateCurrentServices" class="stats-value">-</span>
-                        </div>
-                        <div class="stats-row">
-                            <span class="stats-label">Your Agency:</span>
-                            <span id="updateAgencyName" class="stats-value">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Additional Service to Add *</label>
-                        <select id="additionalService" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" required>
-                            <option value="">Select Additional Service</option>
-                            <option value="MEDICAL REPORT">Medical Report</option>
-                            <option value="COUNSELLING">Counselling</option>
-                            <option value="LEGAL AID">Legal Aid</option>
-                            <option value="PSYCHOSOCIAL SUPPORT">Psychosocial Support</option>
-                            <option value="SHELTER">Shelter</option>
-                            <option value="REFERRAL">Referral</option>
-                            <option value="FOLLOW-UP">Follow-up</option>
-                            <option value="REHABILITATION">Rehabilitation</option>
-                            <option value="FAMILY SUPPORT">Family Support</option>
-                            <option value="EMERGENCY CARE">Emergency Care</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Service Notes (Optional)</label>
-                        <textarea id="serviceNotes" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" rows="3" placeholder="Additional details about the service provided..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Service Date *</label>
-                        <input type="date" id="serviceDate" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" required>
-                    </div>
-                </div>
-                <div style="padding: 20px 30px; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 15px;">
-                    <button type="button" class="btn" onclick="closeUpdateServicesModal()" style="background: #6c757d; color: white;">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveUpdatedServices()">Update Services</button>
-                </div>
-            </div>
-        </div>
+function loadRecordsFromPersistence(callback) {
+  db.collection("cases").get().then(snapshot => {
+    let cases = snapshot.docs.map(doc => doc.data());
+    if (cases.length === 0) {
+      cases = JSON.parse(localStorage.getItem("cases") || "[]");
+    }
+    callback(cases);
+  }).catch(err => {
+    console.error("Error loading Firestore:", err);
+    const cases = JSON.parse(localStorage.getItem("cases") || "[]");
+    callback(cases);
+  });
+}
 
-        <!-- User Management Modal -->
-        <div id="userMgmtModal" class="modal-overlay" style="display: none;">
-            <div class="modal-container" style="max-width: 600px;">
-                <div class="modal-header">
-                    <h2>👥 User Management</h2>
-                    <button class="modal-close" onclick="closeUserMgmtModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div style="margin-bottom: 30px;">
-                        <h3 style="margin-bottom: 15px; color: #2c3e50;">Add New User</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                            <div class="form-group">
-                                <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Username</label>
-                                <input type="text" id="newUsername" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                            </div>
-                            <div class="form-group">
-                                <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Password</label>
-                                <input type="password" id="newPassword" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                            </div>
-                            <div class="form-group">
-                                <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Role</label>
-                                <select id="newUserRole" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" onchange="toggleAgencySelection()">
-                                    <option value="">Select Role</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="viewer">Viewer</option>
-                                    <option value="reporter">Reporter</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Full Name</label>
-                                <input type="text" id="newUserName" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                            </div>
-                        </div>
-                        <div class="form-group" id="agencySelectionGroup" style="display: none;">
-                            <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Agency (Optional for Reporters)</label>
-                            <select id="newUserAgency" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
-                                <option value="">No specific agency (General Reporter)</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-success" onclick="addNewUser()">+ Add User</button>
-                    </div>
-                    
-                    <div>
-                        <h3 style="margin-bottom: 15px; color: #2c3e50;">Existing Users</h3>
-                        <div id="usersList" style="max-height: 300px; overflow-y: auto;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+function saveUserToFirestore(uid, profile) {
+  return db.collection("users").doc(uid).set(profile);
+}
 
-        <!-- Agency Management Modal -->
-        <div id="agencyModal" class="modal-overlay" style="display: none;">
-            <div class="modal-container" style="max-width: 700px;">
-                <div class="modal-header">
-                    <h2>🏢 Manage Agencies</h2>
-                    <button class="modal-close" onclick="closeAgencyModal()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div style="margin-bottom: 30px;">
-                        <h3 style="margin-bottom: 15px; color: #2c3e50;">Add New Agency</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 15px; align-items: end;">
-                            <div class="form-group">
-                                <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Agency Code</label>
-                                <input type="text" id="newAgencyCode" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" placeholder="e.g., EDU" maxlength="5">
-                            </div>
-                            <div class="form-group">
-                                <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Agency Name</label>
-                                <input type="text" id="newAgencyName" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" placeholder="e.g., Ministry of Education">
-                            </div>
-                            <button class="btn btn-success" onclick="addAgency()" style="height: 48px;">+ Add Agency</button>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h3 style="margin-bottom: 15px; color: #2c3e50;">Current Agencies</h3>
-                        <div id="agencyList" style="max-height: 400px; overflow-y: auto;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+function loadUserProfile(uid) {
+  return db.collection("users").doc(uid).get().then(doc => doc.data());
+}
 
-        <!-- Filters Section -->
-        <div id="filtersSection" class="section">
-            <div class="section-header">🔧 Data Filters</div>
-            <div class="section-content">
-                <div class="filters-grid">
-                    <div class="filter-group">
-                        <label class="filter-label">District</label>
-                        <select id="districtFilter" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Districts</option>
-                            <option value="Lusaka">Lusaka</option>
-                            <option value="Ndola">Ndola</option>
-                            <option value="Kitwe">Kitwe</option>
-                            <option value="Livingstone">Livingstone</option>
-                            <option value="Katete">Katete</option>
-                            <option value="Kabwe">Kabwe</option>
-                            <option value="Chingola">Chingola</option>
-                            <option value="Mufulira">Mufulira</option>
-                            <option value="Luanshya">Luanshya</option>
-                            <option value="Kasama">Kasama</option>
-                            <option value="Chipata">Chipata</option>
-                            <option value="Solwezi">Solwezi</option>
-                            <option value="Mongu">Mongu</option>
-                            <option value="Mazabuka">Mazabuka</option>
-                            <option value="Monze">Monze</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Record Type</label>
-                        <select id="recordTypeFilter" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Types</option>
-                            <option value="Victim">Victim</option>
-                            <option value="Witness">Witness</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Crime Type</label>
-                        <select id="crimeTypeFilter" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Crime Types</option>
-                            <option value="RAPE">Rape</option>
-                            <option value="DEFILEMENT">Defilement</option>
-                            <option value="ASSAULT ON A CHILD">Assault on a Child</option>
-                            <option value="CHILD ABUSE">Child Abuse</option>
-                            <option value="TRAFFICKING">Trafficking</option>
-                            <option value="NEGLECT">Neglect</option>
-                            <option value="EXPLOITATION">Exploitation</option>
-                            <option value="DOMESTIC VIOLENCE">Domestic Violence</option>
-                            <option value="OTHER">Other</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Gender</label>
-                        <select id="genderFilter" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Genders</option>
-                            <option value="MALE">Male</option>
-                            <option value="FEMALE">Female</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Age Range</label>
-                        <select id="ageRangeFilter" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Ages</option>
-                            <option value="0-5">0-5 years</option>
-                            <option value="6-10">6-10 years</option>
-                            <option value="11-15">11-15 years</option>
-                            <option value="16-18">16-18 years</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Date Range</label>
-                        <select id="dateRangeFilter" class="filter-select" onchange="applyFilters()">
-                            <option value="">All Dates</option>
-                            <option value="last7days">Last 7 days</option>
-                            <option value="last30days">Last 30 days</option>
-                            <option value="last3months">Last 3 months</option>
-                            <option value="last6months">Last 6 months</option>
-                            <option value="thisyear">This year</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap;">
-                    <button class="btn" onclick="resetFilters()" style="background: #ffc107; color: #000;">🔄 Reset All</button>
-                    <button class="btn" onclick="exportFilteredData()" style="background: #28a745; color: white;">📊 Export Filtered Data</button>
-                </div>
-                
-                <!-- Filter Results Summary -->
-                <div id="filterSummary" class="statistics-summary" style="margin-top: 20px; display: none;">
-                    <h4 style="margin-bottom: 15px; color: #2c3e50;">🎯 Filter Results</h4>
-                    <div class="stats-row">
-                        <span class="stats-label">Active Filters:</span>
-                        <span id="activeFilters" class="stats-value">None</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="stats-label">Records Shown:</span>
-                        <span id="filteredCount" class="stats-value">0</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="stats-label">Total Records:</span>
-                        <span id="totalCount" class="stats-value">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Agency Section (Reporter Only) -->
-        <div id="agencySection" class="section">
-            <div class="section-header">Agency Selection</div>
-            <div class="section-content">
-                <div id="agencyGridContainer" class="agency-grid">
-                    <!-- Dynamic agency cards will be populated here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Reporter Actions Section -->
-        <div id="reporterActionsSection" class="section hidden">
-            <div class="section-header">Reporter Actions</div>
-            <div class="section-content">
-                <div id="selectedAgencyInfo" class="statistics-summary" style="margin-bottom: 20px;">
-                    <div class="stats-row">
-                        <span class="stats-label">Selected Agency:</span>
-                        <span id="currentAgencyName" class="stats-value">Not Selected</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="stats-label">Agency Code:</span>
-                        <span id="currentAgencyCode" class="stats-value">N/A</span>
-                    </div>
-                </div>
-                <div class="action-grid">
-                    <button class="btn btn-success" onclick="openAddRecord()" id="reporterAddBtn">➕ Add New Record</button>
-                    <button class="btn btn-info" onclick="toggleSearch()">🔍 Search Records</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- KPI Cards -->
-        <div id="kpiSection" class="section">
-            <div class="section-header">📊 Key Performance Indicators</div>
-            <div class="section-content">
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div id="totalCases" class="kpi-value">6</div>
-                        <div class="kpi-label">Total Cases</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div id="victimCases" class="kpi-value">4</div>
-                        <div class="kpi-label">Victim Cases</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div id="witnessCases" class="kpi-value">2</div>
-                        <div class="kpi-label">Witness Cases</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div id="avgAge" class="kpi-value">10.5</div>
-                        <div class="kpi-label">Average Age</div>
-                    </div>
-                </div>
-                
-                <!-- Statistics Summary -->
-                <div class="statistics-summary">
-                    <h4 style="margin-bottom: 15px; color: #2c3e50;">📈 Summary Statistics</h4>
-                    <div class="stats-row">
-                        <span class="stats-label">Most Affected District:</span>
-                        <span id="topDistrict" class="stats-value">Lusaka</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="stats-label">Most Common Crime:</span>
-                        <span id="topCrime" class="stats-value">Rape</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="stats-label">Most Common Service:</span>
-                        <span id="topService" class="stats-value">Medical Report</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="stats-label">Female Cases:</span>
-                        <span id="femaleCases" class="stats-value">3 (50%)</span>
-                    </div>
-                    <div class="stats-row">
-                        <span class="stats-label">Male Cases:</span>
-                        <span id="maleCases" class="stats-value">3 (50%)</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Charts -->
-        <div id="chartsSection" class="section">
-            <div class="section-header">📈 Analytics Charts</div>
-            <div class="section-content">
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-title">Cases by District</div>
-                        <div class="chart-canvas">
-                            <canvas id="districtChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-title">Crime Types</div>
-                        <div class="chart-canvas">
-                            <canvas id="crimeChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-title">Age Distribution</div>
-                        <div class="chart-canvas">
-                            <canvas id="ageChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-title">Gender Distribution</div>
-                        <div class="chart-canvas">
-                            <canvas id="genderChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-title">Cases Over Time</div>
-                        <div class="chart-canvas">
-                            <canvas id="timeChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-title">Services Rendered</div>
-                        <div class="chart-canvas">
-                            <canvas id="servicesChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Data Table -->
-        <div id="tableSection" class="section">
-            <div class="section-header">📋 Case Records</div>
-            <div class="section-content">
-                <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Case ID</th>
-                                <th>Type</th>
-                                <th>Date</th>
-                                <th>District</th>
-                                <th>Gender</th>
-                                <th>Age</th>
-                                <th>Crime Type</th>
-                                <th>Services</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="notification" class="notification"></div>
-
-    <script>
         // Global variables
         let currentUser = null;
         let selectedAgency = null;
@@ -1625,8 +1622,14 @@
         }
 
         function initializeData() {
-            allData = [...sampleData];
-            filteredData = [...allData];
+            loadRecordsFromPersistence(function(records){
+                allData = records;
+                filteredData = [...allData];
+                updateKPIs();
+                updateStatistics();
+                updateTable();
+                createCharts();
+            });
             
             // Ensure UI starts with clean state
             updateKPIs();
@@ -2364,6 +2367,7 @@
             // Add to data
             allData.push(newRecord);
             filteredData = [...allData];
+            saveRecordToFirestore(newRecord);
             
             // Update UI
             updateKPIs();
