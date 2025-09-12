@@ -1261,7 +1261,6 @@
 </div>
 </div>
 <div class="notification" id="notification"></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script>
@@ -1568,12 +1567,12 @@ function loadUserProfile(uid) {
         };
 
         // Global functions
-        function fillLogin(username, password) {
+        window.fillLogin = function(username, password) {
             document.getElementById('username').value = username;
             document.getElementById('password').value = password;
         }
 
-        function handleLogin() {
+        window.handleLogin = function() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
             const errorDiv = document.getElementById('loginError');
