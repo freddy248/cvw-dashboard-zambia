@@ -1264,6 +1264,37 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script>
+// === Sync History Logger ===
+function logSyncEvent(action, itemType, details) {
+  let history = JSON.parse(localStorage.getItem("syncHistory") || "[]");
+  history.push({
+    action,
+    type: itemType,
+    details,
+    time: new Date().toLocaleString()
+  });
+  localStorage.setItem("syncHistory", JSON.stringify(history));
+}
+
+// === Offline Sync ===
+window.addEventListener("online", () => {
+  const queue = JSON.parse(localStorage.getItem("offlineQueue") || "[]");
+  if (queue.length > 0) {
+    queue.forEach(item => {
+      if (item.type === "case") {
+        db.collection("cases").doc(item.record['cvw code']).set(item.record);
+        logSyncEvent('synced','case',item.record['cvw code']);
+      }
+      if (item.type === "user") {
+        db.collection("users").doc(item.userId).set(item.profile);
+        logSyncEvent('synced','user',item.userId);
+      }
+    });
+    localStorage.removeItem("offlineQueue");
+    showNotification("Offline data synced with Firebase!", "success");
+  }
+});
+
 // === Persistence Helpers ===
 function saveRecordToFirestore(record) {
   return db.collection("cases").doc(record['cvw code']).set(record)
@@ -1416,38 +1447,31 @@ function loadUserProfile(uid) {
         };
 
         window.addAgency = function() {
-            console.log('Adding new agency...');
-            const code = document.getElementById('newAgencyCode').value.trim().toUpperCase();
-            const name = document.getElementById('newAgencyName').value.trim();
+  const agencyCode = document.getElementById('newAgencyCode').value.trim().toUpperCase();
+  const agencyName = document.getElementById('newAgencyName').value.trim();
 
-            // Validation
-            if (!code || !name) {
-                showNotification('Both agency code and name are required', 'error');
-                return;
-            }
+  if (!agencyCode || !agencyName) {
+    showNotification("Please fill in all agency fields", "error");
+    return;
+  }
 
-            if (code.length < 2 || code.length > 5) {
-                showNotification('Agency code must be 2-5 characters long', 'error');
-                return;
-            }
-
-            if (!/^[A-Z]+$/.test(code)) {
-                showNotification('Agency code must contain only uppercase letters', 'error');
-                return;
-            }
-
-            // Check if agency already exists
-            if (agencies.find(agency => agency.code === code)) {
-                showNotification('Agency code already exists', 'error');
-                return;
-            }
-
-            // Add agency with default icon
-            const newAgency = {
-                code: code,
-                name: name,
-                icon: '🏢' // Default icon
-            };
+  if (navigator.onLine && !currentUser.offline) {
+    db.collection("agencies").doc(agencyCode).set({ code: agencyCode, name: agencyName })
+      .then(() => {
+        showNotification(`Agency ${agencyName} created successfully`, "success");
+        updateAgenciesList();
+      })
+      .catch(err => {
+        showNotification("Error creating agency: " + err.message, "error");
+      });
+  } else {
+    let offlineQueue = JSON.parse(localStorage.getItem("offlineQueue") || "[]");
+    offlineQueue.push({ type: "agency", code: agencyCode, name: agencyName });
+    logSyncEvent('queued','agency',agencyCode);
+    localStorage.setItem("offlineQueue", JSON.stringify(offlineQueue));
+    showNotification(`Agency ${agencyName} saved offline and will sync later.`, "warning");
+  }
+};
 
             agencies.push(newAgency);
             
@@ -1573,305 +1597,58 @@ function loadUserProfile(uid) {
         }
 
         window.handleLogin = function() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const errorDiv = document.getElementById('loginError');
-            
-            if (!username || !password) {
-                errorDiv.style.display = 'block';
-                errorDiv.textContent = 'Please enter both username and password';
-                return;
-            }
-            
-            firebase.auth().signInWithEmailAndPassword(username + "@cvw.local", password)
-        .then(cred => {
-            return loadUserProfile(cred.user.uid);
-        })
-        .then(profile => {
-            if (profile) {
-                currentUser = profile;
-                showDashboard();
-                errorDiv.style.display = 'none';
-                showNotification(`Welcome, ${currentUser.name}!`, 'success');
-            } else {
-                showNotification("User profile not found", "error");
-            }
-        })
-        .catch(err => {
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = err.message;
-        });
-            if (false) { // DISABLE old hardcoded check
-                currentUser = users[username];
-                showDashboard();
-                errorDiv.style.display = 'none';
-                showNotification(`Welcome, ${currentUser.name}!`, 'success');
-            } else {
-                errorDiv.style.display = 'block';
-                errorDiv.textContent = 'Invalid username or password';
-                document.getElementById('loginForm').style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => {
-                    document.getElementById('loginForm').style.animation = '';
-                }, 500);
-            }
-        }
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const errorDiv = document.getElementById('loginError');
 
-        function showDashboard() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
-            
-            // Clear any previous user's filters and search states
-            clearAllFiltersAndSearch();
-            
-            // Update user info
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('userRole').textContent = `${currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)} Account`;
-            document.getElementById('userAvatar').textContent = currentUser.avatar;
-            
-            // Auto-select agency for agency-specific reporters
-            if (currentUser.agency) {
-                selectedAgency = currentUser.agency;
-                setTimeout(() => {
-                    showNotification(`Agency automatically selected: ${getAgencyFullName(currentUser.agency)}. You can now add new records.`, 'success');
-                }, 500);
-            }
-            
-            // Initialize data and UI
-            initializeData();
-            updateAgencyGrid(); // Populate agency grid
-        }
+  // Try Firebase first
+  firebase.auth().signInWithEmailAndPassword(username + "@cvw.local", password)
+    .then(cred => loadUserProfile(cred.user.uid))
+    .then(profile => {
+      if (profile) {
+        currentUser = profile;
+        currentUser.offline = false;
+        showDashboard();
+        errorDiv.style.display = 'none';
+        showNotification(`Welcome, ${currentUser.name}!`, 'success');
+      } else {
+        showNotification("User profile not found in Firestore", "error");
+      }
+    })
+    .catch(err => {
+      console.warn("Firebase login failed, trying offline fallback:", err.message);
 
-        function initializeData() {
-            loadRecordsFromPersistence(function(records){
-                allData = records;
-                filteredData = [...allData];
-                updateKPIs();
-                updateStatistics();
-                updateTable();
-                createCharts();
-            });
-            
-            // Ensure UI starts with clean state
-            updateKPIs();
-            updateStatistics();
-            updateTable();
-            updateUserInterface();
-            
-            // Clear any existing filter summary
-            const filterSummary = document.getElementById('filterSummary');
-            if (filterSummary) {
-                filterSummary.style.display = 'none';
-            }
-            
-            // Create charts after a short delay
-            setTimeout(() => {
-                if (typeof Chart !== 'undefined') {
-                    createCharts();
-                }
-            }, 500);
-        }
+      // Offline fallback demo users
+      const demoUsers = {
+        admin: { password: "admin123", role: "admin", name: "Administrator", avatar: "A" },
+        viewer: { password: "view123", role: "viewer", name: "Viewer", avatar: "V" },
+        reporter: { password: "report123", role: "reporter", name: "Reporter", avatar: "R", agency: "NPA" }
+      };
 
-        function updateUserInterface() {
-            if (!currentUser) return;
+      if (demoUsers[username] && demoUsers[username].password === password) {
+        currentUser = demoUsers[username];
+        currentUser.offline = true;
+        showDashboard();
+        errorDiv.style.display = 'none';
+        showNotification(`Welcome (offline), ${currentUser.name}!`, 'success');
+      } else {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = "Invalid login credentials";
+      }
+    });
+};
 
-            const dashboardControls = document.getElementById('dashboardControlsSection');
-            const exportReports = document.getElementById('exportReportsSection');
-            const agencySection = document.getElementById('agencySection');
-            const reporterActionsSection = document.getElementById('reporterActionsSection');
-            const filtersSection = document.getElementById('filtersSection');
-            const kpiSection = document.getElementById('kpiSection');
-            const chartsSection = document.getElementById('chartsSection');
-            const tableSection = document.getElementById('tableSection');
-
-            // Reset all sections first
-            [dashboardControls, exportReports, agencySection, reporterActionsSection, filtersSection, kpiSection, chartsSection, tableSection].forEach(section => {
-                if (section) {
-                    section.style.display = 'none';
-                    section.classList.add('hidden');
-                }
-            });
-
-            if (currentUser.role === 'viewer') {
-                // Viewer: Export, filters, KPIs, and charts
-                exportReports.classList.remove('hidden');
-                exportReports.style.display = 'block';
-                filtersSection.classList.remove('hidden');
-                filtersSection.style.display = 'block';
-                kpiSection.classList.remove('hidden');
-                kpiSection.style.display = 'block';
-                chartsSection.classList.remove('hidden');
-                chartsSection.style.display = 'block';
-                
-            } else if (currentUser.role === 'reporter') {
-                // Check if user has a specific agency
-                if (currentUser.agency) {
-                    // Agency-specific reporter: Show reporter actions only
-                    reporterActionsSection.classList.remove('hidden');
-                    reporterActionsSection.style.display = 'block';
-                    updateReporterAgencyInfo();
-                } else {
-                    // General reporter: Show agency selection
-                    agencySection.classList.remove('hidden');
-                    agencySection.style.display = 'block';
-                }
-                
-            } else if (currentUser.role === 'admin') {
-                // Admin: Show everything except export reports and agency sections
-                dashboardControls.classList.remove('hidden');
-                dashboardControls.style.display = 'block';
-                filtersSection.classList.remove('hidden');
-                filtersSection.style.display = 'block';
-                kpiSection.classList.remove('hidden');
-                kpiSection.style.display = 'block';
-                chartsSection.classList.remove('hidden');
-                chartsSection.style.display = 'block';
-                tableSection.classList.remove('hidden');
-                tableSection.style.display = 'block';
-            }
-        }
-
-        function updateReporterAgencyInfo() {
-            if (currentUser && currentUser.agency) {
-                document.getElementById('currentAgencyName').textContent = getAgencyFullName(currentUser.agency);
-                document.getElementById('currentAgencyCode').textContent = currentUser.agency;
-            }
-        }
-
-        // Enhanced Age Handling Functions
-        function setupModalAgeHandlers() {
-            const ageInput = document.getElementById('modalCvwAge');
-            const ageUnit = document.getElementById('modalAgeUnit');
-            
-            if (ageInput && ageUnit) {
-                ageUnit.addEventListener('change', function() {
-                    const unit = this.value;
-                    
-                    if (unit === 'months') {
-                        ageInput.max = '60'; // 5 years max in months
-                        ageInput.placeholder = 'Enter months (0-60)';
-                        ageInput.title = 'Enter age in months (0-60 months = 0-5 years)';
-                        // Highlight for months input
-                        ageInput.style.borderColor = '#dc2626';
-                        ageInput.style.backgroundColor = '#fef2f2';
-                    } else if (unit === 'years') {
-                        ageInput.max = '18';
-                        ageInput.placeholder = 'Enter years (0-18)';
-                        ageInput.title = 'Enter age in years (0-18 years)';
-                        // Reset styling for years
-                        ageInput.style.borderColor = '#e0e0e0';
-                        ageInput.style.backgroundColor = 'white';
-                    } else {
-                        ageInput.max = '120';
-                        ageInput.placeholder = 'Enter age';
-                        ageInput.title = '';
-                        ageInput.style.borderColor = '#e0e0e0';
-                        ageInput.style.backgroundColor = 'white';
-                    }
-                    
-                    // Clear the input when unit changes
-                    ageInput.value = '';
-                });
-
-                // Validate age input based on unit
-                ageInput.addEventListener('input', function() {
-                    const unit = ageUnit.value;
-                    const value = parseFloat(this.value);
-                    
-                    if (unit === 'months' && value > 60) {
-                        this.setCustomValidity('Maximum 60 months (5 years). Use "Years" for older children.');
-                    } else if (unit === 'years' && value > 18) {
-                        this.setCustomValidity('Maximum 18 years for CVW cases.');
-                    } else if (value < 0) {
-                        this.setCustomValidity('Age cannot be negative.');
-                    } else {
-                        this.setCustomValidity('');
-                    }
-                });
-            }
-        }
-
-        // Function to convert age to years for database storage
-        function convertAgeToYears(age, unit) {
-            if (!age || !unit) return null;
-            
-            const ageNum = parseFloat(age);
-            
-            if (unit === 'months') {
-                return Math.round((ageNum / 12) * 100) / 100; // Convert months to years, round to 2 decimals
-            } else if (unit === 'years') {
-                return ageNum;
-            }
-            
-            return ageNum;
-        }
-
-        // Function to display age in human-readable format
-        function formatAgeDisplay(ageInYears) {
-            if (!ageInYears || ageInYears === 0) return 'N/A';
-            
-            const years = parseFloat(ageInYears);
-            
-            // If less than 1 year, show in months
-            if (years < 1) {
-                const months = Math.round(years * 12);
-                return `${months} month${months !== 1 ? 's' : ''}`;
-            }
-            
-            // If it's a whole number, show as years
-            if (years === Math.floor(years)) {
-                return `${Math.floor(years)} year${Math.floor(years) !== 1 ? 's' : ''}`;
-            }
-            
-            // If it has decimals (converted from months), show in a readable format
-            const wholeYears = Math.floor(years);
-            const extraMonths = Math.round((years - wholeYears) * 12);
-            
-            if (wholeYears === 0) {
-                return `${extraMonths} month${extraMonths !== 1 ? 's' : ''}`;
-            } else if (extraMonths === 0) {
-                return `${wholeYears} year${wholeYears !== 1 ? 's' : ''}`;
-            } else {
-                return `${wholeYears}y ${extraMonths}m`;
-            }
-        }
-
-        // Generate case ID for modal (FIXED with agency detection & sequential numbering)
-        window.generateModalCaseId = function() {
-            const recordType = document.getElementById('modalRecordType').value;
-            const caseIdInput = document.getElementById('modalCaseId');
-
-            if (!recordType) {
-                caseIdInput.value = '';
-                return;
-            }
-
-            // Detect agency (priority: logged in reporter > manually selected agency)
-            const agencyCode = currentUser?.agency || selectedAgency;
-            if (!agencyCode) {
-                caseIdInput.value = '';
-                showNotification('Please select an agency first.', 'error');
-                return;
-            }
-
-            // Record type suffix
-            const typeSuffix = recordType === 'Victim' ? 'CV' : 'CW';
-
-            // Build prefix (e.g., NPA-CV, MOH-CW, ZP-CV, etc.)
-            const prefix = `${agencyCode}-${typeSuffix}`;
-
-            // Find existing IDs with this prefix and get max number
-            const existingIds = allData
-                .filter(r => r['cvw code'] && r['cvw code'].startsWith(prefix))
-                .map(r => {
-                    const match = r['cvw code'].match(/(\d+)$/);
-                    return match ? parseInt(match[1]) : 0;
-                });
-
-            const nextNumber = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
-
-            // Assign the new case ID
-            caseIdInput.value = `${prefix}${nextNumber}`;
-        };
+      if (demoUsers[username] && demoUsers[username].password === password) {
+        currentUser = demoUsers[username];
+        showDashboard();
+        errorDiv.style.display = 'none';
+        showNotification(`Welcome (offline), ${currentUser.name}!`, 'success');
+      } else {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = "Invalid login credentials";
+      }
+    });
+};
 
         // Hook generator into opening of Add Record modal
         window.openAddRecord = function() {
@@ -2387,7 +2164,15 @@ function loadUserProfile(uid) {
             // Add to data
             allData.push(newRecord);
             filteredData = [...allData];
-            saveRecordToFirestore(newRecord);
+            if (navigator.onLine && !currentUser.offline) {
+              saveRecordToFirestore(newRecord);
+            } else {
+              let offlineQueue = JSON.parse(localStorage.getItem("offlineQueue") || "[]");
+              offlineQueue.push({ type: "case", record: newRecord });
+              logSyncEvent('queued','case',newRecord['cvw code']);
+              localStorage.setItem("offlineQueue", JSON.stringify(offlineQueue));
+              console.warn("Saved record offline:", newRecord['cvw code']);
+            }
             
             // Update UI
             updateKPIs();
@@ -2815,42 +2600,37 @@ function loadUserProfile(uid) {
         };
 
         window.addNewUser = function() {
-            console.log('Adding new user...');
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value.trim();
-            const role = document.getElementById('newUserRole').value;
-            const name = document.getElementById('newUserName').value.trim();
-            const agency = document.getElementById('newUserAgency').value;
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value.trim();
+  const role = document.getElementById('newRole').value;
+  const name = document.getElementById('newName').value.trim();
+  const agency = document.getElementById('newAgency').value.trim();
 
-            // Validation
-            if (!username || !password || !role || !name) {
-                showNotification('All fields are required', 'error');
-                return;
-            }
+  if (!username || !password || !role || !name) {
+    showNotification("Please fill in all required fields", "error");
+    return;
+  }
 
-            if (username.length < 3) {
-                showNotification('Username must be at least 3 characters long', 'error');
-                return;
-            }
+  const newUser = { username, role, name, agency, avatar: name.charAt(0).toUpperCase() };
 
-            if (password.length < 6) {
-                showNotification('Password must be at least 6 characters long', 'error');
-                return;
-            }
-
-            if (users[username]) {
-                showNotification('Username already exists', 'error');
-                return;
-            }
-
-            // Add user
-            const newUser = {
-                password: password,
-                role: role,
-                name: name,
-                avatar: name.charAt(0).toUpperCase(),
-                createdAt: new Date()
-            };
+  if (navigator.onLine && !currentUser.offline) {
+    firebase.auth().createUserWithEmailAndPassword(username + "@cvw.local", password)
+      .then(cred => saveUserToFirestore(cred.user.uid, newUser))
+      .then(() => {
+        updateUsersList();
+        showNotification(`User ${username} created successfully`, "success");
+      })
+      .catch(err => {
+        showNotification("Error creating user: " + err.message, "error");
+      });
+  } else {
+    let offlineQueue = JSON.parse(localStorage.getItem("offlineQueue") || "[]");
+    offlineQueue.push({ type: "user", userId: username, profile: newUser });
+    logSyncEvent('queued','user',username);
+    localStorage.setItem("offlineQueue", JSON.stringify(offlineQueue));
+    showNotification(`User ${username} saved offline and will sync later.`, "warning");
+  }
+};
 
             // Add agency if reporter and agency selected
             if (role === 'reporter' && agency) {
@@ -3080,6 +2860,18 @@ function loadUserProfile(uid) {
                 }
             });
         });
-    </script>
+    
+window.showSyncHistory = function() {
+  let history = JSON.parse(localStorage.getItem("syncHistory") || "[]");
+  if (history.length === 0) {
+    alert("No sync history available.");
+    return;
+  }
+  let logText = history.map(h =>
+    `[${h.time}] ${h.action.toUpperCase()} ${h.type} → ${h.details}`
+  ).join("\n");
+  alert("Sync History:\n\n" + logText);
+};
+</script>
 </body>
 </html>
