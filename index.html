@@ -2,572 +2,305 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>CVW Dashboard - Zambia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CVW Dashboard - Zambia (Full)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .login-screen {
-            max-width: 400px;
-            margin: 10vh auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            text-align: center;
-        }
-
-        .login-title {
-            color: #2c3e50;
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .login-subtitle {
-            color: #7f8c8d;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-info {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #ffc107;
-            color: #000;
-        }
-
-        .demo-accounts {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .account-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 8px;
-            background: white;
-            border-radius: 5px;
-        }
-
-        .dashboard {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            margin-bottom: 20px;
-        }
-
-        .header {
-            text-align: center;
-            padding: 30px;
-            border-bottom: 2px solid #667eea;
-        }
-
-        .header h1 {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .header .subtitle {
-            color: #7f8c8d;
-            font-size: 1.1rem;
-        }
-
-        .user-bar {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .section {
-            background: white;
-            margin-bottom: 30px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .section-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 20px;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .section-content {
-            padding: 30px;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            z-index: 10000;
-            display: none;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .notification.success {
-            background: #d1fae5;
-            color: #059669;
-            border: 1px solid #10b981;
-        }
-
-        .notification.error {
-            background: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #ef4444;
-        }
-
-        .notification.info {
-            background: #dbeafe;
-            color: #2563eb;
-            border: 1px solid #3b82f6;
-        }
-
-        .notification.warning {
-            background: #fef3c7;
-            color: #d97706;
-            border: 1px solid #f59e0b;
-        }
-
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-        }
+  :root { --pri:#5b6cf9; --pri2:#764ba2; --bg:#f4f7fb; --card:#fff; --muted:#6b7280; }
+  *{box-sizing:border-box} body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);margin:0;min-height:100vh;color:#111827}
+  .container{max-width:1200px;margin:0 auto;padding:20px}
+  .card{background:rgba(255,255,255,.98);border-radius:16px;box-shadow:0 16px 36px rgba(0,0,0,.08);padding:20px}
+  .hidden{display:none !important}
+  .login{max-width:420px;margin:10vh auto}
+  h1,h2{margin:0 0 8px} .subtitle{color:#6b7280;margin-bottom:16px}
+  input,select{width:100%;padding:12px 14px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px}
+  .btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .btn-pri{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+  .btn-dan{background:#ef4444;color:#fff} .btn-sec{background:#111827;color:#fff}
+  .grid{display:grid;gap:12px} .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width:900px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(1,minmax(0,1fr))}}
+  table{width:100%;border-collapse:collapse} th,td{padding:10px;border-bottom:1px solid #e5e7eb;font-size:14px}
+  th{text-align:left;color:#374151} .pill{padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}
+  .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .note{position:fixed;top:16px;right:16px;padding:12px 14px;border-radius:10px;display:none;font-weight:600}
+  .note.success{background:#d1fae5;color:#065f46;border:1px solid #10b981}
+  .note.error{background:#fee2e2;color:#991b1b;border:1px solid #ef4444}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
+  .modal .sheet{background:#fff;border-radius:14px;max-width:560px;width:96%;padding:18px}
 </style>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
-    authDomain: "cvw-dashboard-zambia.firebaseapp.com",
-    projectId: "cvw-dashboard-zambia",
-    storageBucket: "cvw-dashboard-zambia.appspot.com",
-    messagingSenderId: "905368303709",
-    appId: "1:905368303709:web:e71f7abc063e78224b35b4"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+const firebaseConfig = {
+  apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
+  authDomain: "cvw-dashboard-zambia.firebaseapp.com",
+  projectId: "cvw-dashboard-zambia",
+  storageBucket: "cvw-dashboard-zambia.appspot.com",
+  messagingSenderId: "905368303709",
+  appId: "1:905368303709:web:e71f7abc063e78224b35b4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 </script>
 </head>
 <body>
+<div class="container">
+  <div id="login" class="card login">
+    <h1>📊 CVW Dashboard</h1>
+    <p class="subtitle">Zambia Child Victim & Witness Analytics</p>
+    <div id="loginError" class="note error" style="display:none">Invalid credentials</div>
+    <div class="grid">
+      <input id="username" placeholder="Username"/>
+      <input id="password" placeholder="Password" type="password"/>
+      <button class="btn btn-pri" onclick="handleLogin()">🚀 Login</button>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <b>Demo accounts</b>
+      <div class="grid g3" style="margin-top:8px">
+        <button class="btn" onclick="fillLogin('admin','admin123')">admin/admin123</button>
+        <button class="btn" onclick="fillLogin('viewer','view123')">viewer/view123</button>
+        <button class="btn" onclick="fillLogin('reporter','report123')">reporter/report123</button>
+        <button class="btn" onclick="fillLogin('npa_reporter','npa_reporter')">npa_reporter</button>
+        <button class="btn" onclick="fillLogin('moh_reporter','moh_reporter')">moh_reporter</button>
+        <button class="btn" onclick="fillLogin('zp_reporter','zp_reporter')">zp_reporter</button>
+      </div>
+    </div>
+  </div>
 
-<!-- Login Screen -->
-<div class="login-screen" id="loginScreen">
-    <h1 class="login-title">📊 CVW Dashboard</h1>
-    <p class="login-subtitle">Zambia Child Victim & Witness Analytics</p>
-    
-    <div class="notification error" id="loginError" style="position: static; display: none; margin-bottom: 20px;">
-        Invalid credentials
+  <div id="app" class="hidden">
+    <div class="card bar">
+      <div style="display:flex;gap:10px;align-items:center">
+        <div id="avatar" class="pill" style="background:#111827;color:#fff"></div>
+        <div>
+          <div id="name" style="font-weight:700"></div>
+          <div id="role" class="muted" style="color:#6b7280"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sec" onclick="openAdd()">➕ Add Record</button>
+        <button class="btn btn-sec" onclick="exportCSV()">📊 CSV</button>
+        <button class="btn btn-sec" onclick="exportPDF()">📄 PDF</button>
+        <button class="btn btn-dan" onclick="logout()">🚪 Logout</button>
+      </div>
     </div>
-    
-    <div id="loginForm">
-        <div class="form-group">
-            <input class="form-input" id="username" placeholder="Username" required type="text"/>
-        </div>
-        <div class="form-group">
-            <input class="form-input" id="password" placeholder="Password" required type="password"/>
-        </div>
-        <button class="btn btn-primary" onclick="handleLogin()" type="button">🚀 Login</button>
+
+    <div class="card">
+      <div class="bar">
+        <b>Filters</b>
+        <button class="btn" onclick="resetFilters()">Reset</button>
+      </div>
+      <div class="grid g4">
+        <select id="fDistrict" onchange="applyFilters()">
+          <option value="">All Districts</option>
+          <option>Lusaka</option><option>Ndola</option><option>Kitwe</option>
+        </select>
+        <select id="fType" onchange="applyFilters()">
+          <option value="">Record Type</option>
+          <option>Victim</option><option>Witness</option>
+        </select>
+        <select id="fCrime" onchange="applyFilters()">
+          <option value="">Crime Type</option>
+          <option>Rape</option><option>Defilement</option><option>GBV</option>
+        </select>
+        <select id="fGender" onchange="applyFilters()">
+          <option value="">Gender</option>
+          <option>Male</option><option>Female</option>
+        </select>
+      </div>
+      <div id="filterSummary" class="subtitle" style="margin-top:8px"></div>
     </div>
-    
-    <div class="demo-accounts">
-        <h3 style="margin-bottom: 15px; color: #2c3e50;">Demo Accounts</h3>
-        <div class="account-row">
-            <span><strong>Admin:</strong> admin / admin123</span>
-            <button class="btn btn-sm btn-success" onclick="fillLogin('admin', 'admin123')">Fill</button>
-        </div>
-        <div class="account-row">
-            <span><strong>Viewer:</strong> viewer / view123</span>
-            <button class="btn btn-sm btn-info" onclick="fillLogin('viewer', 'view123')">Fill</button>
-        </div>
-        <div class="account-row">
-            <span><strong>General Reporter:</strong> reporter / report123</span>
-            <button class="btn btn-sm btn-warning" onclick="fillLogin('reporter', 'report123')">Fill</button>
-        </div>
-        <div class="account-row">
-            <span><strong>NPA Reporter:</strong> npa_reporter / npa_reporter</span>
-            <button class="btn btn-sm" onclick="fillLogin('npa_reporter', 'npa_reporter')" style="background: #6f42c1; color: white;">Fill</button>
-        </div>
-        <div class="account-row">
-            <span><strong>MOH Reporter:</strong> moh_reporter / moh_reporter</span>
-            <button class="btn btn-sm" onclick="fillLogin('moh_reporter', 'moh_reporter')" style="background: #e83e8c; color: white;">Fill</button>
-        </div>
-        <div class="account-row">
-            <span><strong>ZP Reporter:</strong> zp_reporter / zp_reporter</span>
-            <button class="btn btn-sm" onclick="fillLogin('zp_reporter', 'zp_reporter')" style="background: #20c997; color: white;">Fill</button>
-        </div>
+
+    <div class="grid g3" style="margin:12px 0">
+      <div class="card"><div>Total Records</div><h2 id="kpiCount">0</h2></div>
+      <div class="card"><div>Victims</div><h2 id="kpiVictims">0</h2></div>
+      <div class="card"><div>Witnesses</div><h2 id="kpiWitnesses">0</h2></div>
     </div>
+
+    <div class="grid g2">
+      <div class="card"><canvas id="chart"></canvas></div>
+      <div class="card">
+        <div class="bar">
+          <b>Records</b>
+          <input id="search" placeholder="Search Case ID / District / Crime…" oninput="applyFilters()" style="max-width:260px"/>
+        </div>
+        <table>
+          <thead><tr><th>Case ID</th><th>District</th><th>Type</th><th>Crime</th><th>Gender</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Main Dashboard -->
-<div class="container hidden" id="mainDashboard">
-    <!-- User Bar -->
-    <div class="user-bar">
-        <div class="user-info">
-            <div class="user-avatar" id="userAvatar">A</div>
-            <div>
-                <div id="userName" style="font-weight: 600; color: #2c3e50;">Administrator</div>
-                <div id="userRole" style="font-size: 0.9rem; color: #7f8c8d;">Admin Account</div>
-            </div>
-        </div>
-        <button class="btn" onclick="logout()" style="background: #dc3545; color: white;">🚪 Logout</button>
-    </div>
+<div id="addModal" class="modal"><div class="sheet">
+  <h3>Add Record</h3>
+  <div class="grid g2" style="margin-top:10px">
+    <input id="aCase" placeholder="Case ID (e.g., NPA-CV1)">
+    <select id="aDistrict"><option>Lusaka</option><option>Ndola</option><option>Kitwe</option></select>
+    <select id="aType"><option>Victim</option><option>Witness</option></select>
+    <select id="aCrime"><option>Rape</option><option>Defilement</option><option>GBV</option></select>
+    <select id="aGender"><option>Male</option><option>Female</option></select>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+    <button class="btn" onclick="closeAdd()">Cancel</button>
+    <button class="btn btn-pri" onclick="saveRecord()">Save</button>
+  </div>
+</div></div>
 
-    <!-- Header -->
-    <div class="dashboard">
-        <div class="header">
-            <h1>📊 CVW Analytics Dashboard</h1>
-            <p style="font-size: 1.5rem; font-weight: bold; color: #2c3e50; margin: 10px 0;">ZAMBIA</p>
-            <p class="subtitle">Child Victim & Witness Case Management System</p>
-        </div>
-    </div>
-
-    <!-- Dashboard Controls Section -->
-    <div class="section" id="dashboardControlsSection">
-        <div class="section-header">🎛️ Dashboard Controls</div>
-        <div class="section-content">
-            <div class="action-grid">
-                <button class="btn btn-success" onclick="showNotification('Feature available in full version', 'info')">➕ Add New Record</button>
-                <button class="btn btn-info" onclick="showNotification('Search feature available in full version', 'info')">🔍 Search Records</button>
-                <button class="btn" onclick="showNotification('Export PDF available in full version', 'info')" style="background: #dc3545; color: white;">📄 Export PDF</button>
-                <button class="btn" onclick="showNotification('Export CSV available in full version', 'info')" style="background: #28a745; color: white;">📊 Export CSV</button>
-                <button class="btn" onclick="showNotification('User management available in full version', 'info')" style="background: #6f42c1; color: white;">👥 Manage Users</button>
-                <button class="btn" onclick="showNotification('Agency management available in full version', 'info')" style="background: #fd7e14; color: white;">🏢 Manage Agencies</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Welcome Section -->
-    <div class="section">
-        <div class="section-header">👋 Welcome</div>
-        <div class="section-content">
-            <h3 style="color: #2c3e50; margin-bottom: 15px;">Login Successful!</h3>
-            <p style="color: #6c757d; line-height: 1.8;">
-                You have successfully logged into the CVW Dashboard. This is a demonstration of the fixed login functionality. 
-                The full dashboard features including charts, data tables, user management, and reporting capabilities 
-                would be available in the complete implementation.
-            </p>
-            <div style="background: #e3f2fd; padding: 20px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #2196f3;">
-                <h4 style="color: #1976d2; margin-bottom: 10px;">Current User Info:</h4>
-                <p><strong>Username:</strong> <span id="currentUsername">-</span></p>
-                <p><strong>Role:</strong> <span id="currentUserRole">-</span></p>
-                <p><strong>Agency:</strong> <span id="currentUserAgency">-</span></p>
-                <p><strong>Login Status:</strong> <span id="loginStatus">-</span></p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="notification" id="notification"></div>
+<div id="note" class="note"></div>
 
 <script>
-// Global variables
-let currentUser = null;
-
-// Complete demo users with all accounts from UI
-const demoUsers = {
-    admin: { password: "admin123", role: "admin", name: "Administrator", avatar: "A" },
-    viewer: { password: "view123", role: "viewer", name: "Data Viewer", avatar: "V" },
-    reporter: { password: "report123", role: "reporter", name: "General Reporter", avatar: "R" },
-    npa_reporter: { password: "npa_reporter", role: "reporter", name: "NPA Reporter", avatar: "N", agency: "NPA" },
-    moh_reporter: { password: "moh_reporter", role: "reporter", name: "MOH Reporter", avatar: "M", agency: "MOH" },
-    zp_reporter: { password: "zp_reporter", role: "reporter", name: "ZP Reporter", avatar: "Z", agency: "ZP" }
+let currentUser=null;
+const demoUsers={
+  admin:{password:'admin123',role:'admin',name:'Administrator',avatar:'A'},
+  viewer:{password:'view123',role:'viewer',name:'Data Viewer',avatar:'V'},
+  reporter:{password:'report123',role:'reporter',name:'General Reporter',avatar:'R'},
+  npa_reporter:{password:'npa_reporter',role:'reporter',name:'NPA Reporter',avatar:'N',agency:'NPA'},
+  moh_reporter:{password:'moh_reporter',role:'reporter',name:'MOH Reporter',avatar:'M',agency:'MOH'},
+  zp_reporter:{password:'zp_reporter',role:'reporter',name:'ZP Reporter',avatar:'Z',agency:'ZP'}
 };
 
-// Firebase helper functions (with safety checks)
-function loadUserProfile(uid) {
-    if (typeof firebase !== 'undefined' && firebase.apps.length > 0 && db) {
-        return db.collection("users").doc(uid).get().then(doc => doc.data());
-    } else {
-        return Promise.resolve(null);
-    }
-}
+let records = JSON.parse(localStorage.getItem('records')||'[]');
+let offlineQueue = JSON.parse(localStorage.getItem('offlineQueue')||'[]');
 
-// FIXED: Added the missing showDashboard function
-function showDashboard() {
-    console.log('Showing dashboard for user:', currentUser);
-    
-    // Hide login screen
-    document.getElementById('loginScreen').classList.add('hidden');
-    
-    // Show main dashboard
-    document.getElementById('mainDashboard').classList.remove('hidden');
-    
-    // Update user info in the dashboard
-    document.getElementById('userAvatar').textContent = currentUser.avatar || currentUser.name.charAt(0);
-    document.getElementById('userName').textContent = currentUser.name;
-    document.getElementById('userRole').textContent = `${currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)} Account`;
-    
-    // Update welcome section user info
-    document.getElementById('currentUsername').textContent = currentUser.username || 'N/A';
-    document.getElementById('currentUserRole').textContent = currentUser.role;
-    document.getElementById('currentUserAgency').textContent = currentUser.agency || 'None';
-    document.getElementById('loginStatus').textContent = currentUser.offline ? 'Offline Mode' : 'Online Mode';
-    
-    // Show/hide sections based on user role
-    updateUIBasedOnRole();
-}
+function note(msg,type='success'){const n=document.getElementById('note');n.textContent=msg;n.className='note '+type;n.style.display='block';setTimeout(()=>n.style.display='none',3000);}
+function $(id){return document.getElementById(id)}
 
-function updateUIBasedOnRole() {
-    const dashboardControls = document.getElementById('dashboardControlsSection');
-    
-    // For now, show dashboard controls for all users
-    // In full implementation, you'd customize this based on role
-    if (currentUser.role === 'admin') {
-        dashboardControls.style.display = 'block';
-    } else if (currentUser.role === 'viewer') {
-        dashboardControls.style.display = 'block';
-    } else if (currentUser.role === 'reporter') {
-        dashboardControls.style.display = 'block';
-    }
+async function loadUserProfile(uid){
+  try{const doc=await db.collection('users').doc(uid).get();return doc.exists?doc.data():null}catch(e){return null}
 }
-
-// FIXED: Complete login function with proper error handling
-window.handleLogin = function() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const errorDiv = document.getElementById('loginError');
-    
-    console.log('Attempting login for:', username);
-    
-    // Validate input
-    if (!username || !password) {
-        errorDiv.style.display = 'block';
-        errorDiv.textContent = 'Please enter both username and password';
-        return;
-    }
-    
-    // Try Firebase first
-    firebase.auth().signInWithEmailAndPassword(username + "@cvw.local", password)
-        .then(cred => loadUserProfile(cred.user.uid))
-        .then(profile => {
-            if (profile) {
-                currentUser = profile;
-                currentUser.username = username;
-                currentUser.offline = false;
-                showDashboard();
-                errorDiv.style.display = 'none';
-                showNotification(`Welcome, ${currentUser.name}!`, 'success');
-                console.log('Firebase login successful');
-            } else {
-                showNotification("User profile not found in Firestore", "error");
-            }
-        })
-        .catch(err => {
-            console.warn("Firebase login failed, trying offline fallback:", err.message);
-            
-            // Offline fallback with complete demo users
-            if (demoUsers[username] && demoUsers[username].password === password) {
-                currentUser = { ...demoUsers[username] };
-                currentUser.username = username;
-                currentUser.offline = true;
-                showDashboard();
-                errorDiv.style.display = 'none';
-                showNotification(`Welcome (offline), ${currentUser.name}!`, 'success');
-                console.log('Offline login successful for:', username);
-            } else {
-                errorDiv.style.display = 'block';
-                errorDiv.textContent = 'Invalid login credentials';
-                console.log('Login failed for:', username);
-            }
-        });
+window.handleLogin=function(){
+  const u=$('username').value.trim(), p=$('password').value.trim(), err=$('loginError');
+  if(!u||!p){err.style.display='block';err.textContent='Enter both fields';return}
+  firebase.auth().signInWithEmailAndPassword(u+'@cvw.local',p)
+   .then(cred=>loadUserProfile(cred.user.uid))
+   .then(profile=>{
+     if(profile){ currentUser=Object.assign({username:u,offline:false},profile); onLogin(); }
+     else { note('User profile not found in Firestore','error'); }
+   })
+   .catch(()=>{
+     if(demoUsers[u]?.password===p){ currentUser=Object.assign({username:u,offline:true},demoUsers[u]); onLogin(); }
+     else { err.style.display='block'; err.textContent='Invalid credentials'; }
+   });
 };
+window.fillLogin=function(u,p){$('username').value=u;$('password').value=p};
 
-// Fill login form function
-window.fillLogin = function(username, password) {
-    document.getElementById('username').value = username;
-    document.getElementById('password').value = password;
-};
-
-// Logout function
-function logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        currentUser = null;
-        
-        // Show login screen
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('mainDashboard').classList.add('hidden');
-        
-        // Clear login form
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        
-        // Clear error message
-        document.getElementById('loginError').style.display = 'none';
-        
-        showNotification('Logged out successfully', 'info');
-        console.log('User logged out');
-    }
+function onLogin(){
+  $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+  $('avatar').textContent = currentUser.avatar||currentUser.name?.[0]||'?';
+  $('name').textContent = currentUser.name||currentUser.username;
+  $('role').textContent = (currentUser.role||'user') + (currentUser.offline?' · Offline':' · Online');
+  render(); syncIfOnline();
 }
+function logout(){ if(confirm('Logout?')){ currentUser=null;$('app').classList.add('hidden');$('login').classList.remove('hidden');}}
 
-// Show notification function
-function showNotification(message, type = 'success') {
-    const notification = document.getElementById('notification');
-    notification.textContent = message;
-    notification.className = `notification ${type}`;
-    notification.style.display = 'block';
-    
-    console.log(`Notification (${type}):`, message);
-    
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 4000);
+const filter={district:'',type:'',crime:'',gender:'',q:''};
+function applyFilters(){
+  filter.district=$('fDistrict').value; filter.type=$('fType').value;
+  filter.crime=$('fCrime').value; filter.gender=$('fGender').value;
+  filter.q=($('search').value||'').toLowerCase(); render();
 }
+function resetFilters(){ $('fDistrict').value='';$('fType').value='';$('fCrime').value='';$('fGender').value='';$('search').value='';applyFilters()}
 
-// Add event listeners when DOM loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('CVW Dashboard loaded and ready');
-    
-    // Enter key support for login
-    document.getElementById('username').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            handleLogin();
-        }
+function openAdd(){ $('addModal').style.display='flex' }
+function closeAdd(){ $('addModal').style.display='none' }
+function saveRecord(){
+  const r={
+    id: $('aCase').value.trim()||('CASE-'+Date.now()),
+    district: $('aDistrict').value, type: $('aType').value,
+    crime: $('aCrime').value, gender: $('aGender').value,
+    ts: Date.now(), owner: currentUser?.username||'unknown'
+  };
+  if(navigator.onLine && !currentUser?.offline){
+    db.collection('cases').doc(r.id).set(r).then(()=>{
+      records.push(r); persist(); render(); note('Record saved to Firestore','success');
+    }).catch(err=>{
+      offlineQueue.push({op:'upsert',type:'case',payload:r}); persist(); render(); note('Saved offline (write failed): '+err.message,'error');
     });
-    
-    document.getElementById('password').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            handleLogin();
-        }
-    });
-    
-    // Focus on username field
-    document.getElementById('username').focus();
-});
+  }else{
+    offlineQueue.push({op:'upsert',type:'case',payload:r}); records.push(r); persist(); render(); note('Saved offline; will sync later','warning');
+  }
+  closeAdd();
+}
+function persist(){ localStorage.setItem('records',JSON.stringify(records)); localStorage.setItem('offlineQueue',JSON.stringify(offlineQueue)); }
+
+function syncIfOnline(){
+  if(!(navigator.onLine && !currentUser?.offline)) return;
+  if(!offlineQueue.length) return;
+  const q=[...offlineQueue]; offlineQueue=[];
+  const batch = db.batch();
+  q.forEach(job=>{
+    if(job.type==='case'&&job.op==='upsert'){
+      const ref=db.collection('cases').doc(job.payload.id); batch.set(ref,job.payload,{merge:true});
+    }
+  });
+  batch.commit().then(()=>{ persist(); note('Offline changes synced','success') })
+  .catch(err=>{ offlineQueue=q; persist(); note('Sync failed: '+err.message,'error') });
+}
+
+let chartRef=null;
+function render(){
+  if(navigator.onLine && !currentUser?.offline){
+    db.collection('cases').limit(200).get().then(snap=>{
+      const server = snap.docs.map(d=>d.data());
+      const map=new Map(records.map(r=>[r.id,r])); server.forEach(r=>map.set(r.id,r));
+      records=[...map.values()]; persist(); draw();
+    }).catch(draw);
+  }else{ draw(); }
+}
+function draw(){
+  let rows = records.filter(r=>
+    (!filter.district||r.district===filter.district) &&
+    (!filter.type||r.type===filter.type) &&
+    (!filter.crime||r.crime===filter.crime) &&
+    (!filter.gender||r.gender===filter.gender) &&
+    (!filter.q||[r.id,r.district,r.crime,r.type,r.gender].join('|').toLowerCase().includes(filter.q))
+  );
+  document.getElementById('kpiCount').textContent = rows.length;
+  document.getElementById('kpiVictims').textContent = rows.filter(r=>r.type==='Victim').length;
+  document.getElementById('kpiWitnesses').textContent = rows.filter(r=>r.type==='Witness').length;
+  document.getElementById('filterSummary').textContent = `Active: ${['district','type','crime','gender'].filter(k=>filter[k]).length} • Showing ${rows.length} / ${records.length}`;
+  document.getElementById('rows').innerHTML = rows.map(r=>`<tr>
+    <td>${r.id}</td><td>${r.district}</td><td>${r.type}</td><td>${r.crime}</td><td>${r.gender}</td>
+  </tr>`).join('') || `<tr><td colspan="5" style="color:#6b7280">No data</td></tr>`;
+  const byD={}; rows.forEach(r=>byD[r.district]=(byD[r.district]||0)+1);
+  const labels=Object.keys(byD), data=Object.values(byD);
+  const ctx=document.getElementById('chart'); if(chartRef) chartRef.destroy();
+  chartRef=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Cases',data}]},options:{plugins:{legend:{display:false}}}});
+}
+function exportCSV(){
+  const header=['Case ID','District','Type','Crime','Gender'];
+  const csv=[header.join(',')].concat(records.map(r=>[r.id,r.district,r.type,r.crime,r.gender].join(','))).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='cvw_records.csv'; a.click(); URL.revokeObjectURL(url);
+}
+function exportPDF(){
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({orientation:'l',unit:'pt',format:'a4'});
+  doc.setFontSize(16); doc.text('CVW Dashboard — Records Report', 40, 40);
+  doc.setFontSize(10); doc.text(new Date().toLocaleString(), 40, 58);
+  const rows = records.map(r=>[r.id,r.district,r.type,r.crime,r.gender]);
+  doc.autoTable({startY:80, head:[['Case ID','District','Type','Crime','Gender']], body:rows, styles:{fontSize:9}});
+  doc.save('cvw_records.pdf');
+}
+document.addEventListener('click',e=>{ if(e.target.id==='addModal') closeAdd() });
+document.addEventListener('DOMContentLoaded',()=>{ document.getElementById('username').focus() });
+if(!records.length){
+  records=[
+    {id:'NPA-CV1',district:'Lusaka',type:'Victim',crime:'Defilement',gender:'Female',ts:Date.now()},
+    {id:'NPA-CV2',district:'Ndola',type:'Witness',crime:'GBV',gender:'Male',ts:Date.now()},
+    {id:'NPA-CV3',district:'Kitwe',type:'Victim',crime:'Rape',gender:'Female',ts:Date.now()}
+  ];
+  localStorage.setItem('records',JSON.stringify(records));
+}
 </script>
-
 </body>
 </html>
