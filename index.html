@@ -577,6 +577,24 @@
 </style>
 
 <!-- Firebase removed for offline-first operation -->
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
+    authDomain: "cvw-dashboard-zambia.firebaseapp.com",
+    projectId: "cvw-dashboard-zambia",
+    storageBucket: "cvw-dashboard-zambia.firebasestorage.app",
+    messagingSenderId: "905368303709",
+    appId: "1:905368303709:web:e71f7abc063e78224b35b4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+
 </head>
 <body>
 
@@ -1141,6 +1159,105 @@
 <script>
 // Global variables
 let currentUser = null;
+// ===== Custom Functions Injected for Firebase Hybrid Support =====
+
+// Fill login form helper (for demo buttons)
+window.fillLogin = function(username, password) {
+  document.getElementById('username').value = username;
+  document.getElementById('password').value = password;
+};
+
+// Hybrid Firebase + Offline login
+window.handleLogin = function() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const errorDiv = document.getElementById('loginError');
+
+  if (!username || !password) {
+    errorDiv.style.display = 'block';
+    errorDiv.textContent = 'Please enter both username and password';
+    return;
+  }
+
+  // Try Firebase login first
+  auth.signInWithEmailAndPassword(username, password)
+    .then(userCredential => {
+      currentUser = userCredential.user;
+      db.collection("users").doc(currentUser.uid).get().then(doc => {
+        if (doc.exists) {
+          currentUser.role = doc.data().role;
+          currentUser.agency = doc.data().agency || null;
+        } else {
+          currentUser.role = "viewer";
+        }
+        currentUser.offline = false;
+        showDashboard();
+        errorDiv.style.display = 'none';
+        showNotification(`Welcome, ${currentUser.email}! (Online)`, 'success');
+      });
+    })
+    .catch(error => {
+      console.warn("Firebase login failed, falling back to demo users...", error);
+      if (demoUsers[username] && demoUsers[username].password === password) {
+        currentUser = { ...demoUsers[username] };
+        currentUser.username = username;
+        currentUser.offline = true;
+        showDashboard();
+        errorDiv.style.display = 'none';
+        showNotification(`Welcome, ${currentUser.name}! (Offline Demo)`, 'success');
+      } else {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = 'Invalid login credentials';
+      }
+    });
+};
+
+// Hybrid Firebase + Offline user creation
+window.addNewUser = function() {
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value.trim();
+  const role = document.getElementById('newUserRole').value;
+  const name = document.getElementById('newUserName').value.trim();
+
+  if (!username || !password || !role || !name) {
+    showNotification("Please fill in all required fields", "error");
+    return;
+  }
+
+  // Try Firebase Auth user creation
+  auth.createUserWithEmailAndPassword(username, password)
+    .then(userCredential => {
+      const uid = userCredential.user.uid;
+      return db.collection("users").doc(uid).set({
+        email: username,
+        role: role,
+        name: name,
+        agency: role === "reporter" ? null : null
+      }).then(() => {
+        showNotification(`User "${username}" added to Firebase with ${role} role`, "success");
+        updateUsersList();
+      });
+    })
+    .catch(error => {
+      console.warn("Firebase user creation failed, falling back to demo users...", error);
+      demoUsers[username] = {
+        password: password,
+        role: role,
+        name: name,
+        avatar: name.charAt(0).toUpperCase()
+      };
+      updateUsersList();
+      showNotification(`User "${username}" added locally (offline mode)`, "warning");
+    });
+
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('newUserRole').value = '';
+  document.getElementById('newUserName').value = '';
+};
+
+// ===== End of Custom Injection =====
+
 let selectedAgency = null;
 let allData = [];
 let filteredData = [];
