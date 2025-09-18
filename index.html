@@ -1256,6 +1256,94 @@ window.addNewUser = function() {
   document.getElementById('newUserName').value = '';
 };
 
+// Hybrid Firebase + Offline users list rendering
+function updateUsersList() {
+  const usersList = document.getElementById('usersList');
+  usersList.innerHTML = '';
+
+  if (navigator.onLine && auth.currentUser && !currentUser.offline) {
+    db.collection("users").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const user = doc.data();
+        const username = user.email;
+
+        const userDiv = document.createElement('div');
+        userDiv.style.cssText = 'padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: white; display: flex; justify-content: space-between; align-items: center;';
+        
+        userDiv.innerHTML = `
+          <div>
+            <div style="font-weight: 600; color: #2c3e50;">${user.name}</div>
+            <div style="font-size: 0.9rem; color: #6c757d;">Email: ${username} | Role: ${user.role}</div>
+          </div>
+          <div>
+            ${username !== 'admin@cvw.org' ? `<button onclick="deleteUser('${doc.id}')" class="btn btn-sm" style="background: #dc3545; color: white;">Delete</button>` : '<span style="color: #28a745;">Protected</span>'}
+          </div>
+        `;
+        
+        usersList.appendChild(userDiv);
+      });
+    }).catch(error => {
+      console.error("Error fetching Firestore users:", error);
+      showNotification("Could not fetch online users, showing offline list", "warning");
+      renderDemoUsers(usersList);
+    });
+  } else {
+    renderDemoUsers(usersList);
+  }
+}
+
+// Helper to render demo users list
+function renderDemoUsers(usersList) {
+  Object.entries(demoUsers).forEach(([username, user]) => {
+    const userDiv = document.createElement('div');
+    userDiv.style.cssText = 'padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: white; display: flex; justify-content: space-between; align-items: center;';
+    
+    userDiv.innerHTML = `
+      <div>
+        <div style="font-weight: 600; color: #2c3e50;">${user.name}</div>
+        <div style="font-size: 0.9rem; color: #6c757d;">Username: ${username} | Role: ${user.role}</div>
+      </div>
+      <div>
+        ${username !== 'admin' ? `<button onclick="deleteUser('${username}')" class="btn btn-sm" style="background: #dc3545; color: white;">Delete</button>` : '<span style="color: #28a745;">Protected</span>'}
+      </div>
+    `;
+    
+    usersList.appendChild(userDiv);
+  });
+}
+
+// Hybrid Firebase + Offline user deletion
+window.deleteUser = function(identifier) {
+  if (currentUser && currentUser.role !== 'admin') {
+    showNotification('Access denied: Only administrators can delete users', 'error');
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to delete user "${identifier}"?`)) {
+    return;
+  }
+
+  if (navigator.onLine && auth.currentUser && !currentUser.offline) {
+    db.collection("users").doc(identifier).delete()
+      .then(() => {
+        showNotification(`User "${identifier}" deleted from Firestore`, 'success');
+        updateUsersList();
+      })
+      .catch(error => {
+        console.error("Error deleting Firestore user:", error);
+        showNotification("Could not delete user from Firestore", "error");
+      });
+  } else {
+    if (demoUsers[identifier]) {
+      delete demoUsers[identifier];
+      updateUsersList();
+      showNotification(`User "${identifier}" deleted locally (offline mode)`, 'success');
+    } else {
+      showNotification(`User "${identifier}" not found in demo list`, 'error');
+    }
+  }
+};
+
 // ===== End of Custom Injection =====
 
 let selectedAgency = null;
