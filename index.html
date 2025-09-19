@@ -1511,6 +1511,24 @@ window.fillLogin = function(username, password) {
     document.getElementById('password').value = password;
 };
 
+
+// Update Manage User Agency dropdown dynamically
+function updateUserAgencyDropdown() {
+    const agencySelect = document.getElementById('newUserAgency');
+    if (!agencySelect) return;
+
+    // Reset dropdown
+    agencySelect.innerHTML = '<option value="">-- Select Agency --</option>';
+
+    agencies.forEach(agency => {
+        const opt = document.createElement('option');
+        opt.value = agency.code;
+        opt.textContent = `${agency.code} - ${agency.name}`;
+        agencySelect.appendChild(opt);
+    });
+}
+
+
 // Logout function
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
@@ -2499,7 +2517,8 @@ window.addAgency = function() {
     updateAgencyList();
     updateAgencyGrid();
 
-    showNotification(`Agency "${agencyName}" added successfully`, "success");
+        updateUserAgencyDropdown();
+showNotification(`Agency "${agencyName}" added successfully`, "success");
 };
 
 function updateAgencyList() {
@@ -2570,13 +2589,15 @@ window.deleteAgency = function(agencyCode) {
             updateAgencyList();
             updateAgencyGrid();
             
-            showNotification(`Agency "${deletedAgency.name}" has been deleted`, 'success');
+                updateUserAgencyDropdown();
+showNotification(`Agency "${deletedAgency.name}" has been deleted`, 'success');
         }
     }
 };
 
 // Add event listeners when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
+    updateUserAgencyDropdown();
     console.log('CVW Dashboard loaded and ready');
     
     // Setup connection monitoring
