@@ -576,24 +576,6 @@
         }
 </style>
 
-<!-- Firebase removed for offline-first operation -->
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
-    authDomain: "cvw-dashboard-zambia.firebaseapp.com",
-    projectId: "cvw-dashboard-zambia",
-    storageBucket: "cvw-dashboard-zambia.firebasestorage.app",
-    messagingSenderId: "905368303709",
-    appId: "1:905368303709:web:e71f7abc063e78224b35b4"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-</script>
 
 </head>
 <body>
@@ -1156,196 +1138,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
+    authDomain: "cvw-dashboard-zambia.firebaseapp.com",
+    projectId: "cvw-dashboard-zambia",
+    storageBucket: "cvw-dashboard-zambia.appspot.com",
+    messagingSenderId: "905368303709",
+    appId: "1:905368303709:web:e71f7abc063e78224b35b4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+
 <script>
 // Global variables
 let currentUser = null;
-// ===== Custom Functions Injected for Firebase Hybrid Support =====
-
-// Fill login form helper (for demo buttons)
-window.fillLogin = function(username, password) {
-  document.getElementById('username').value = username;
-  document.getElementById('password').value = password;
-};
-
-// Hybrid Firebase + Offline login
-window.handleLogin = function() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value.trim();
-  const errorDiv = document.getElementById('loginError');
-
-  if (!username || !password) {
-    errorDiv.style.display = 'block';
-    errorDiv.textContent = 'Please enter both username and password';
-    return;
-  }
-
-  // Try Firebase login first
-  auth.signInWithEmailAndPassword(username, password)
-    .then(userCredential => {
-      currentUser = userCredential.user;
-      db.collection("users").doc(currentUser.uid).get().then(doc => {
-        if (doc.exists) {
-          currentUser.role = doc.data().role;
-          currentUser.agency = doc.data().agency || null;
-        } else {
-          currentUser.role = "viewer";
-        }
-        currentUser.offline = false;
-        showDashboard();
-        errorDiv.style.display = 'none';
-        showNotification(`Welcome, ${currentUser.email}! (Online)`, 'success');
-      });
-    })
-    .catch(error => {
-      console.warn("Firebase login failed, falling back to demo users...", error);
-      if (demoUsers[username] && demoUsers[username].password === password) {
-        currentUser = { ...demoUsers[username] };
-        currentUser.username = username;
-        currentUser.offline = true;
-        showDashboard();
-        errorDiv.style.display = 'none';
-        showNotification(`Welcome, ${currentUser.name}! (Offline Demo)`, 'success');
-      } else {
-        errorDiv.style.display = 'block';
-        errorDiv.textContent = 'Invalid login credentials';
-      }
-    });
-};
-
-// Hybrid Firebase + Offline user creation
-window.addNewUser = function() {
-  const username = document.getElementById('newUsername').value.trim();
-  const password = document.getElementById('newPassword').value.trim();
-  const role = document.getElementById('newUserRole').value;
-  const name = document.getElementById('newUserName').value.trim();
-
-  if (!username || !password || !role || !name) {
-    showNotification("Please fill in all required fields", "error");
-    return;
-  }
-
-  // Try Firebase Auth user creation
-  auth.createUserWithEmailAndPassword(username, password)
-    .then(userCredential => {
-      const uid = userCredential.user.uid;
-      return db.collection("users").doc(uid).set({
-        email: username,
-        role: role,
-        name: name,
-        agency: role === "reporter" ? null : null
-      }).then(() => {
-        showNotification(`User "${username}" added to Firebase with ${role} role`, "success");
-        updateUsersList();
-      });
-    })
-    .catch(error => {
-      console.warn("Firebase user creation failed, falling back to demo users...", error);
-      demoUsers[username] = {
-        password: password,
-        role: role,
-        name: name,
-        avatar: name.charAt(0).toUpperCase()
-      };
-      updateUsersList();
-      showNotification(`User "${username}" added locally (offline mode)`, "warning");
-    });
-
-  document.getElementById('newUsername').value = '';
-  document.getElementById('newPassword').value = '';
-  document.getElementById('newUserRole').value = '';
-  document.getElementById('newUserName').value = '';
-};
-
-// Hybrid Firebase + Offline users list rendering
-function updateUsersList() {
-  const usersList = document.getElementById('usersList');
-  usersList.innerHTML = '';
-
-  if (navigator.onLine && auth.currentUser && !currentUser.offline) {
-    db.collection("users").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const user = doc.data();
-        const username = user.email;
-
-        const userDiv = document.createElement('div');
-        userDiv.style.cssText = 'padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: white; display: flex; justify-content: space-between; align-items: center;';
-        
-        userDiv.innerHTML = `
-          <div>
-            <div style="font-weight: 600; color: #2c3e50;">${user.name}</div>
-            <div style="font-size: 0.9rem; color: #6c757d;">Email: ${username} | Role: ${user.role}</div>
-          </div>
-          <div>
-            ${username !== 'admin@cvw.org' ? `<button onclick="deleteUser('${doc.id}')" class="btn btn-sm" style="background: #dc3545; color: white;">Delete</button>` : '<span style="color: #28a745;">Protected</span>'}
-          </div>
-        `;
-        
-        usersList.appendChild(userDiv);
-      });
-    }).catch(error => {
-      console.error("Error fetching Firestore users:", error);
-      showNotification("Could not fetch online users, showing offline list", "warning");
-      renderDemoUsers(usersList);
-    });
-  } else {
-    renderDemoUsers(usersList);
-  }
-}
-
-// Helper to render demo users list
-function renderDemoUsers(usersList) {
-  Object.entries(demoUsers).forEach(([username, user]) => {
-    const userDiv = document.createElement('div');
-    userDiv.style.cssText = 'padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: white; display: flex; justify-content: space-between; align-items: center;';
-    
-    userDiv.innerHTML = `
-      <div>
-        <div style="font-weight: 600; color: #2c3e50;">${user.name}</div>
-        <div style="font-size: 0.9rem; color: #6c757d;">Username: ${username} | Role: ${user.role}</div>
-      </div>
-      <div>
-        ${username !== 'admin' ? `<button onclick="deleteUser('${username}')" class="btn btn-sm" style="background: #dc3545; color: white;">Delete</button>` : '<span style="color: #28a745;">Protected</span>'}
-      </div>
-    `;
-    
-    usersList.appendChild(userDiv);
-  });
-}
-
-// Hybrid Firebase + Offline user deletion
-window.deleteUser = function(identifier) {
-  if (currentUser && currentUser.role !== 'admin') {
-    showNotification('Access denied: Only administrators can delete users', 'error');
-    return;
-  }
-
-  if (!confirm(`Are you sure you want to delete user "${identifier}"?`)) {
-    return;
-  }
-
-  if (navigator.onLine && auth.currentUser && !currentUser.offline) {
-    db.collection("users").doc(identifier).delete()
-      .then(() => {
-        showNotification(`User "${identifier}" deleted from Firestore`, 'success');
-        updateUsersList();
-      })
-      .catch(error => {
-        console.error("Error deleting Firestore user:", error);
-        showNotification("Could not delete user from Firestore", "error");
-      });
-  } else {
-    if (demoUsers[identifier]) {
-      delete demoUsers[identifier];
-      updateUsersList();
-      showNotification(`User "${identifier}" deleted locally (offline mode)`, 'success');
-    } else {
-      showNotification(`User "${identifier}" not found in demo list`, 'error');
-    }
-  }
-};
-
-// ===== End of Custom Injection =====
-
 let selectedAgency = null;
 let allData = [];
 let filteredData = [];
@@ -1438,7 +1252,23 @@ const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'
 // Firebase helper functions (removed - offline only)
 // All functionality now works purely offline with localStorage
 
-// Offline-first login function
+// Fill login form helper (for demo buttons) - MUST BE DEFINED FIRST
+window.fillLogin = function(username, password) {
+    document.getElementById('username').value = username;
+    document.getElementById('password').value = password;
+};
+
+// Smart email conversion for Firebase compatibility
+function convertToFirebaseEmail(username) {
+    // If already contains @, return as-is
+    if (username.includes('@')) {
+        return username;
+    }
+    // Convert simple usernames to Firebase-compatible emails
+    return username + '@cvw.org';
+}
+
+// Hybrid Firebase + Offline login function
 window.handleLogin = function() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -1453,21 +1283,84 @@ window.handleLogin = function() {
         return;
     }
     
-    // Direct offline authentication (no Firebase)
+    // Check if Firebase is available
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        console.log('Firebase available, attempting Firebase login...');
+        
+        // Convert username to Firebase email format if needed
+        const firebaseEmail = convertToFirebaseEmail(username);
+        console.log('Trying Firebase login with email:', firebaseEmail);
+        
+        // Try Firebase authentication
+        firebase.auth().signInWithEmailAndPassword(firebaseEmail, password)
+            .then(userCredential => {
+                console.log('Firebase login successful');
+                currentUser = {
+                    uid: userCredential.user.uid,
+                    email: userCredential.user.email,
+                    username: username,
+                    name: userCredential.user.displayName || username,
+                    role: 'admin', // Default role, will be overridden by Firestore data
+                    avatar: username.charAt(0).toUpperCase(),
+                    offline: false
+                };
+                
+                // Try to get user profile from Firestore
+                if (db) {
+                    db.collection("users").doc(currentUser.uid).get()
+                        .then(doc => {
+                            if (doc.exists) {
+                                const userData = doc.data();
+                                currentUser.role = userData.role || 'admin';
+                                currentUser.name = userData.name || currentUser.name;
+                                currentUser.agency = userData.agency || null;
+                            }
+                            
+                            showDashboard();
+                            errorDiv.style.display = 'none';
+                            showNotification(`Welcome, ${currentUser.name}! (Online)`, 'success');
+                        })
+                        .catch(error => {
+                            console.warn('Could not load user profile from Firestore:', error);
+                            showDashboard();
+                            errorDiv.style.display = 'none';
+                            showNotification(`Welcome, ${currentUser.name}! (Online - No Profile)`, 'success');
+                        });
+                } else {
+                    showDashboard();
+                    errorDiv.style.display = 'none';
+                    showNotification(`Welcome, ${currentUser.name}! (Online)`, 'success');
+                }
+            })
+            .catch(error => {
+                console.warn("Firebase login failed, trying offline fallback:", error.message);
+                tryOfflineLogin(username, password, errorDiv);
+            });
+    } else {
+        console.log('Firebase not available, using offline mode...');
+        tryOfflineLogin(username, password, errorDiv);
+    }
+};
+
+// Separate function for offline login logic
+function tryOfflineLogin(username, password, errorDiv) {
+    console.log('Attempting offline login for:', username);
+    
+    // Check demo users (offline fallback)
     if (demoUsers[username] && demoUsers[username].password === password) {
         currentUser = { ...demoUsers[username] };
         currentUser.username = username;
         currentUser.offline = true;
         showDashboard();
         errorDiv.style.display = 'none';
-        showNotification(`Welcome, ${currentUser.name}!`, 'success');
+        showNotification(`Welcome, ${currentUser.name}! (Offline Demo)`, 'success');
         console.log('Offline login successful for:', username);
     } else {
         errorDiv.style.display = 'block';
         errorDiv.textContent = 'Invalid login credentials';
         console.log('Login failed for:', username);
     }
-};
+}
 
 // Added the missing showDashboard function
 function showDashboard() {
@@ -2315,6 +2208,7 @@ window.closeUserMgmtModal = function() {
     modal.style.display = 'none';
 };
 
+// Hybrid Firebase + Offline user creation
 window.addNewUser = function() {
     const username = document.getElementById('newUsername').value.trim();
     const password = document.getElementById('newPassword').value.trim();
@@ -2326,7 +2220,52 @@ window.addNewUser = function() {
         return;
     }
     
-    // Add user to demo users (in real app, this would save to database)
+    // Check if Firebase is available and user is online
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && !currentUser.offline) {
+        console.log('Attempting to create Firebase user...');
+        
+        // Convert username to Firebase email format
+        const firebaseEmail = convertToFirebaseEmail(username);
+        console.log('Creating Firebase user with email:', firebaseEmail);
+        
+        // Try Firebase user creation
+        firebase.auth().createUserWithEmailAndPassword(firebaseEmail, password)
+            .then(userCredential => {
+                const uid = userCredential.user.uid;
+                console.log('Firebase user created successfully:', uid);
+                
+                // Store user profile in Firestore
+                if (db) {
+                    return db.collection("users").doc(uid).set({
+                        email: firebaseEmail,
+                        username: username,
+                        role: role,
+                        name: name,
+                        agency: role === "reporter" ? null : null,
+                        createdAt: new Date()
+                    });
+                } else {
+                    return Promise.resolve();
+                }
+            })
+            .then(() => {
+                showNotification(`User "${username}" created in Firebase with ${role} role`, "success");
+                updateUsersList();
+                clearUserForm();
+            })
+            .catch(error => {
+                console.warn("Firebase user creation failed, falling back to demo users:", error.message);
+                createOfflineUser(username, password, role, name);
+            });
+    } else {
+        console.log('Firebase not available or in offline mode, creating offline user...');
+        createOfflineUser(username, password, role, name);
+    }
+};
+
+// Helper function to create offline user
+function createOfflineUser(username, password, role, name) {
+    // Add user to demo users (offline fallback)
     demoUsers[username] = {
         password: password,
         role: role,
@@ -2335,20 +2274,69 @@ window.addNewUser = function() {
     };
     
     updateUsersList();
-    
-    // Clear form
+    clearUserForm();
+    showNotification(`User "${username}" added locally (offline mode) with ${role} role`, "warning");
+}
+
+// Helper function to clear user form
+function clearUserForm() {
     document.getElementById('newUsername').value = '';
     document.getElementById('newPassword').value = '';
     document.getElementById('newUserRole').value = '';
     document.getElementById('newUserName').value = '';
-    
-    showNotification(`User "${username}" added successfully with ${role} role`, 'success');
-};
+}
 
+// Enhanced users list rendering
 function updateUsersList() {
     const usersList = document.getElementById('usersList');
-    usersList.innerHTML = '';
+    if (!usersList) return;
     
+    usersList.innerHTML = '';
+
+    // Check if we should load from Firebase or show demo users
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && !currentUser.offline && db) {
+        console.log('Loading users from Firebase...');
+        
+        db.collection("users").get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    console.log('No Firebase users found, showing demo users');
+                    renderDemoUsers(usersList);
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    const userDiv = document.createElement('div');
+                    userDiv.style.cssText = 'padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: white; display: flex; justify-content: space-between; align-items: center;';
+                    
+                    userDiv.innerHTML = `
+                        <div>
+                            <div style="font-weight: 600; color: #2c3e50;">${user.name || user.username || 'Unknown'}</div>
+                            <div style="font-size: 0.9rem; color: #6c757d;">Email: ${user.email} | Role: ${user.role}</div>
+                            <div style="font-size: 0.8rem; color: #adb5bd;">UID: ${doc.id}</div>
+                        </div>
+                        <div>
+                            ${user.email !== 'admin@cvw.org' ? `<button onclick="deleteFirebaseUser('${doc.id}', '${user.email}')" class="btn btn-sm" style="background: #dc3545; color: white;">Delete</button>` : '<span style="color: #28a745;">Protected</span>'}
+                        </div>
+                    `;
+                    
+                    usersList.appendChild(userDiv);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching Firebase users:", error);
+                showNotification("Could not fetch online users, showing offline list", "warning");
+                renderDemoUsers(usersList);
+            });
+    } else {
+        console.log('Showing demo users (offline mode)');
+        renderDemoUsers(usersList);
+    }
+}
+
+// Helper to render demo users list
+function renderDemoUsers(usersList) {
     Object.entries(demoUsers).forEach(([username, user]) => {
         const userDiv = document.createElement('div');
         userDiv.style.cssText = 'padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: white; display: flex; justify-content: space-between; align-items: center;';
@@ -2357,9 +2345,10 @@ function updateUsersList() {
             <div>
                 <div style="font-weight: 600; color: #2c3e50;">${user.name}</div>
                 <div style="font-size: 0.9rem; color: #6c757d;">Username: ${username} | Role: ${user.role}</div>
+                <div style="font-size: 0.8rem; color: #adb5bd;">Demo Account</div>
             </div>
             <div>
-                ${username !== 'admin' ? `<button onclick="deleteUser('${username}')" class="btn btn-sm" style="background: #dc3545; color: white;">Delete</button>` : '<span style="color: #28a745;">Protected</span>'}
+                ${username !== 'admin' ? `<button onclick="deleteDemoUser('${username}')" class="btn btn-sm" style="background: #dc3545; color: white;">Delete</button>` : '<span style="color: #28a745;">Protected</span>'}
             </div>
         `;
         
@@ -2367,7 +2356,32 @@ function updateUsersList() {
     });
 }
 
-window.deleteUser = function(username) {
+// Firebase user deletion
+window.deleteFirebaseUser = function(uid, email) {
+    if (!currentUser || currentUser.role !== 'admin') {
+        showNotification('Access denied: Only administrators can delete users', 'error');
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to delete user "${email}"?`)) {
+        return;
+    }
+
+    if (db) {
+        db.collection("users").doc(uid).delete()
+            .then(() => {
+                showNotification(`User "${email}" deleted from Firestore`, 'success');
+                updateUsersList();
+            })
+            .catch(error => {
+                console.error("Error deleting Firebase user:", error);
+                showNotification(`Could not delete user: ${error.message}`, "error");
+            });
+    }
+};
+
+// Demo user deletion
+window.deleteDemoUser = function(username) {
     if (username === 'admin') {
         showNotification('Cannot delete the administrator account', 'error');
         return;
@@ -2376,7 +2390,19 @@ window.deleteUser = function(username) {
     if (confirm(`Are you sure you want to delete user "${username}"?`)) {
         delete demoUsers[username];
         updateUsersList();
-        showNotification(`User "${username}" has been deleted`, 'success');
+        showNotification(`User "${username}" deleted from demo accounts`, 'success');
+    }
+};
+
+// Legacy delete function for backward compatibility
+window.deleteUser = function(identifier) {
+    // Try to determine if this is a Firebase UID or demo username
+    if (identifier.length > 15) {
+        // Likely a Firebase UID
+        deleteFirebaseUser(identifier, 'Unknown Email');
+    } else {
+        // Likely a demo username
+        deleteDemoUser(identifier);
     }
 };
 
@@ -2548,6 +2574,9 @@ window.deleteAgency = function(agencyCode) {
 // Add event listeners when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('CVW Dashboard loaded and ready');
+    
+    // Setup connection monitoring
+    setupConnectionMonitoring();
     
     // Enter key support for login
     document.getElementById('username').addEventListener('keypress', function(e) {
