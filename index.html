@@ -1121,6 +1121,18 @@
                     <div class="form-group">
                         <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Full Name</label>
                         <input id="newUserName" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;" type="text"/>
+
+<div class="form-group">
+    <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; display: block;">Agency</label>
+    <select id="newUserAgency" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+        <option value="">-- Select Agency --</option>
+        <option value="NPA">NPA - National Prosecution Authority</option>
+        <option value="MOH">MOH - Ministry of Health</option>
+        <option value="ZP">ZP - Zambia Police</option>
+        <option value="CCCI">CCCI</option>
+    </select>
+</div>
+
                     </div>
                 </div>
                 <button class="btn btn-success" onclick="addNewUser()">+ Add User</button>
@@ -2209,59 +2221,51 @@ window.closeUserMgmtModal = function() {
 };
 
 // Hybrid Firebase + Offline user creation
+
 window.addNewUser = function() {
-    const username = document.getElementById('newUsername').value.trim();
-    const password = document.getElementById('newPassword').value.trim();
-    const role = document.getElementById('newUserRole').value;
-    const name = document.getElementById('newUserName').value.trim();
-    
-    if (!username || !password || !role || !name) {
-        showNotification("Please fill in all required fields", "error");
-        return;
-    }
-    
-    // Check if Firebase is available and user is online
-    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && !currentUser.offline) {
-        console.log('Attempting to create Firebase user...');
-        
-        // Convert username to Firebase email format
-        const firebaseEmail = convertToFirebaseEmail(username);
-        console.log('Creating Firebase user with email:', firebaseEmail);
-        
-        // Try Firebase user creation
-        firebase.auth().createUserWithEmailAndPassword(firebaseEmail, password)
-            .then(userCredential => {
-                const uid = userCredential.user.uid;
-                console.log('Firebase user created successfully:', uid);
-                
-                // Store user profile in Firestore
-                if (db) {
-                    return db.collection("users").doc(uid).set({
-                        email: firebaseEmail,
-                        username: username,
-                        role: role,
-                        name: name,
-                        agency: role === "reporter" ? null : null,
-                        createdAt: new Date()
-                    });
-                } else {
-                    return Promise.resolve();
-                }
-            })
-            .then(() => {
-                showNotification(`User "${username}" created in Firebase with ${role} role`, "success");
-                updateUsersList();
-                clearUserForm();
-            })
-            .catch(error => {
-                console.warn("Firebase user creation failed, falling back to demo users:", error.message);
-                createOfflineUser(username, password, role, name);
-            });
-    } else {
-        console.log('Firebase not available or in offline mode, creating offline user...');
-        createOfflineUser(username, password, role, name);
-    }
+  const usernameInput = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value.trim();
+  const role = document.getElementById('newUserRole').value;
+  const name = document.getElementById('newUserName').value.trim();
+  const agency = document.getElementById('newUserAgency').value;
+
+  console.log("addNewUser called with:", usernameInput, role, name, agency);
+
+  if (!usernameInput || !password || !role || !name || !agency) {
+    showNotification("Please fill in all required fields including agency", "error");
+    return;
+  }
+
+  let email = usernameInput.includes('@') ? usernameInput : usernameInput + '@cvw.org';
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(userCredential => {
+      const uid = userCredential.user.uid;
+      return db.collection("users").doc(uid).set({
+        email, role, name, agency
+      });
+    })
+    .then(() => {
+      showNotification(`User "${email}" added with role ${role} (${agency})`, "success");
+      if (typeof updateUsersList === "function") updateUsersList();
+    })
+    .catch(error => {
+      console.error("User creation failed, fallback to demo:", error);
+      window.demoUsers[usernameInput] = {
+        password, role, name, agency,
+        avatar: name.charAt(0).toUpperCase()
+      };
+      if (typeof updateUsersList === "function") updateUsersList();
+      showNotification(`User "${usernameInput}" added locally with ${role} (${agency})`, "warning");
+    });
+
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('newUserRole').value = '';
+  document.getElementById('newUserName').value = '';
+  document.getElementById('newUserAgency').value = '';
 };
+
 
 // Helper function to create offline user
 function createOfflineUser(username, password, role, name) {
