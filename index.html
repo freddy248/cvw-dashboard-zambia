@@ -2685,5 +2685,132 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+
+<script>
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
+  authDomain: "cvw-dashboard-zambia.firebaseapp.com",
+  projectId: "cvw-dashboard-zambia",
+  storageBucket: "cvw-dashboard-zambia.firebasestorage.app",
+  messagingSenderId: "905368303709",
+  appId: "1:905368303709:web:e71f7abc063e78224b35b4"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+db.enablePersistence({synchronizeTabs:true}).catch(err=>console.warn("Persistence not enabled:",err));
+
+// Status indicator
+function setStatus(online) {
+  const dot = document.getElementById("statusDot");
+  const text = document.getElementById("statusText");
+  if (!dot || !text) return;
+  if (online) {
+    dot.style.backgroundColor = "#10b981";
+    text.textContent = "Online";
+  } else {
+    dot.style.backgroundColor = "#f59e0b";
+    text.textContent = "Offline Mode";
+  }
+}
+setStatus(navigator.onLine);
+
+// Queues for offline changes
+function saveQueue(key, arr){ localStorage.setItem(key, JSON.stringify(arr)); }
+function loadQueue(key){ return JSON.parse(localStorage.getItem(key) || "[]"); }
+
+let offlineAgenciesQueue = loadQueue("offlineAgenciesQueue");
+let offlineCasesQueue = loadQueue("offlineCasesQueue");
+let offlineUsersQueue = loadQueue("offlineUsersQueue");
+
+function queueAgency(agency){ offlineAgenciesQueue.push(agency); saveQueue("offlineAgenciesQueue",offlineAgenciesQueue); }
+function queueCase(record){ offlineCasesQueue.push(record); saveQueue("offlineCasesQueue",offlineCasesQueue); }
+function queueUser(user){ offlineUsersQueue.push(user); saveQueue("offlineUsersQueue",offlineUsersQueue); }
+
+// Sync back logic
+async function syncBack(){
+  try {
+    for (const ag of offlineAgenciesQueue){
+      await db.collection("agencies").doc(ag.code).set(ag,{merge:true});
+    }
+    for (const c of offlineCasesQueue){
+      await db.collection("cases").doc(c.caseId).set(c,{merge:true});
+    }
+    for (const u of offlineUsersQueue){
+      await db.collection("users").doc(u.username).set(u,{merge:true});
+    }
+    offlineAgenciesQueue=[]; offlineCasesQueue=[]; offlineUsersQueue=[];
+    localStorage.removeItem("offlineAgenciesQueue");
+    localStorage.removeItem("offlineCasesQueue");
+    localStorage.removeItem("offlineUsersQueue");
+    showNotification("Offline changes synced to Firebase","success");
+  } catch(e){
+    console.warn("Sync back failed:",e.message);
+  }
+}
+
+window.addEventListener("online",()=>{ setStatus(true); syncBack(); });
+window.addEventListener("offline",()=>setStatus(false));
+
+// Example overrides
+window.addAgency = async function(){
+  const code = document.getElementById("newAgencyCode").value.trim().toUpperCase();
+  const name = document.getElementById("newAgencyName").value.trim();
+  if (!code||!name) return showNotification("Fill agency fields","error");
+  try{
+    await db.collection("agencies").doc(code).set({code,name,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    showNotification("Agency saved (Online)","success");
+  }catch(e){
+    queueAgency({code,name,createdAt:new Date()});
+    showNotification("Agency saved (Offline)","warning");
+    setStatus(false);
+  }
+};
+
+window.saveNewRecord = async function(){
+  const recordType=document.getElementById("modalRecordType").value;
+  const dateVal=document.getElementById("modalDateReported").value;
+  const district=document.getElementById("modalDistrict").value;
+  const gender=document.getElementById("modalGender").value;
+  const age=parseInt(document.getElementById("modalAge").value||"0",10);
+  const crimeType=document.getElementById("modalCrimeType").value;
+  const caseId="CASE-"+Date.now();
+  const payload={caseId,recordType,dateReported:new Date(dateVal),district,gender,age,crimeType,createdAt:new Date()};
+  try{
+    await db.collection("cases").doc(caseId).set({...payload,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    showNotification("Case saved (Online)","success");
+  }catch(e){
+    queueCase(payload);
+    showNotification("Case saved (Offline)","warning");
+    setStatus(false);
+  }
+};
+
+window.addNewUser = async function(){
+  const username=document.getElementById("newUsername").value;
+  const password=document.getElementById("newPassword").value;
+  const role=document.getElementById("newUserRole").value;
+  const name=document.getElementById("newUserName").value;
+  const agency=document.getElementById("newUserAgency").value;
+  if (!username||!password||!role||!name) return showNotification("Fill user fields","error");
+  const email=username.includes("@")?username:username+"@cvw.org";
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(email,password);
+    await db.collection("users").doc(cred.user.uid).set({uid:cred.user.uid,email,username,role,name,agency,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    showNotification("User saved (Online)","success");
+  }catch(e){
+    queueUser({username,password,role,name,agency,createdAt:new Date()});
+    showNotification("User saved (Offline)","warning");
+    setStatus(false);
+  }
+};
+</script>
+
 </body>
 </html>
