@@ -2631,6 +2631,9 @@ showNotification(`Agency "${deletedAgency.name}" has been deleted`, 'success');
 
 // Add event listeners when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
+    listenToCases();
+    listenToUsers();
+    listenToAgencies();
     updateAgencyDropdown();
     console.log('CVW Dashboard loaded and ready');
     
