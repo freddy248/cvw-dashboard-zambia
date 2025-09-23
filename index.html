@@ -2551,7 +2551,8 @@ window.addAgency = function() {
     updateAgencyList();
     updateAgencyGrid();
 
-    showNotification(`Agency "${agencyName}" added successfully`, "success");
+        updateAgencyDropdown();
+showNotification(`Agency "${agencyName}" added successfully`, "success");
 };
 
 function updateAgencyList() {
@@ -2622,13 +2623,15 @@ window.deleteAgency = function(agencyCode) {
             updateAgencyList();
             updateAgencyGrid();
             
-            showNotification(`Agency "${deletedAgency.name}" has been deleted`, 'success');
+                updateAgencyDropdown();
+showNotification(`Agency "${deletedAgency.name}" has been deleted`, 'success');
         }
     }
 };
 
 // Add event listeners when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
+    updateAgencyDropdown();
     console.log('CVW Dashboard loaded and ready');
     
     // Setup connection monitoring
@@ -2686,131 +2689,22 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
-
-<script>
-// Initialize Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
-  authDomain: "cvw-dashboard-zambia.firebaseapp.com",
-  projectId: "cvw-dashboard-zambia",
-  storageBucket: "cvw-dashboard-zambia.firebasestorage.app",
-  messagingSenderId: "905368303709",
-  appId: "1:905368303709:web:e71f7abc063e78224b35b4"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-db.enablePersistence({synchronizeTabs:true}).catch(err=>console.warn("Persistence not enabled:",err));
-
-// Status indicator
-function setStatus(online) {
-  const dot = document.getElementById("statusDot");
-  const text = document.getElementById("statusText");
-  if (!dot || !text) return;
-  if (online) {
-    dot.style.backgroundColor = "#10b981";
-    text.textContent = "Online";
-  } else {
-    dot.style.backgroundColor = "#f59e0b";
-    text.textContent = "Offline Mode";
-  }
-}
-setStatus(navigator.onLine);
-
-// Queues for offline changes
-function saveQueue(key, arr){ localStorage.setItem(key, JSON.stringify(arr)); }
-function loadQueue(key){ return JSON.parse(localStorage.getItem(key) || "[]"); }
-
-let offlineAgenciesQueue = loadQueue("offlineAgenciesQueue");
-let offlineCasesQueue = loadQueue("offlineCasesQueue");
-let offlineUsersQueue = loadQueue("offlineUsersQueue");
-
-function queueAgency(agency){ offlineAgenciesQueue.push(agency); saveQueue("offlineAgenciesQueue",offlineAgenciesQueue); }
-function queueCase(record){ offlineCasesQueue.push(record); saveQueue("offlineCasesQueue",offlineCasesQueue); }
-function queueUser(user){ offlineUsersQueue.push(user); saveQueue("offlineUsersQueue",offlineUsersQueue); }
-
-// Sync back logic
-async function syncBack(){
-  try {
-    for (const ag of offlineAgenciesQueue){
-      await db.collection("agencies").doc(ag.code).set(ag,{merge:true});
-    }
-    for (const c of offlineCasesQueue){
-      await db.collection("cases").doc(c.caseId).set(c,{merge:true});
-    }
-    for (const u of offlineUsersQueue){
-      await db.collection("users").doc(u.username).set(u,{merge:true});
-    }
-    offlineAgenciesQueue=[]; offlineCasesQueue=[]; offlineUsersQueue=[];
-    localStorage.removeItem("offlineAgenciesQueue");
-    localStorage.removeItem("offlineCasesQueue");
-    localStorage.removeItem("offlineUsersQueue");
-    showNotification("Offline changes synced to Firebase","success");
-  } catch(e){
-    console.warn("Sync back failed:",e.message);
-  }
-}
-
-window.addEventListener("online",()=>{ setStatus(true); syncBack(); });
-window.addEventListener("offline",()=>setStatus(false));
-
-// Example overrides
-window.addAgency = async function(){
-  const code = document.getElementById("newAgencyCode").value.trim().toUpperCase();
-  const name = document.getElementById("newAgencyName").value.trim();
-  if (!code||!name) return showNotification("Fill agency fields","error");
-  try{
-    await db.collection("agencies").doc(code).set({code,name,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-    showNotification("Agency saved (Online)","success");
-  }catch(e){
-    queueAgency({code,name,createdAt:new Date()});
-    showNotification("Agency saved (Offline)","warning");
-    setStatus(false);
-  }
-};
-
-window.saveNewRecord = async function(){
-  const recordType=document.getElementById("modalRecordType").value;
-  const dateVal=document.getElementById("modalDateReported").value;
-  const district=document.getElementById("modalDistrict").value;
-  const gender=document.getElementById("modalGender").value;
-  const age=parseInt(document.getElementById("modalAge").value||"0",10);
-  const crimeType=document.getElementById("modalCrimeType").value;
-  const caseId="CASE-"+Date.now();
-  const payload={caseId,recordType,dateReported:new Date(dateVal),district,gender,age,crimeType,createdAt:new Date()};
-  try{
-    await db.collection("cases").doc(caseId).set({...payload,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-    showNotification("Case saved (Online)","success");
-  }catch(e){
-    queueCase(payload);
-    showNotification("Case saved (Offline)","warning");
-    setStatus(false);
-  }
-};
-
-window.addNewUser = async function(){
-  const username=document.getElementById("newUsername").value;
-  const password=document.getElementById("newPassword").value;
-  const role=document.getElementById("newUserRole").value;
-  const name=document.getElementById("newUserName").value;
-  const agency=document.getElementById("newUserAgency").value;
-  if (!username||!password||!role||!name) return showNotification("Fill user fields","error");
-  const email=username.includes("@")?username:username+"@cvw.org";
-  try{
-    const cred=await auth.createUserWithEmailAndPassword(email,password);
-    await db.collection("users").doc(cred.user.uid).set({uid:cred.user.uid,email,username,role,name,agency,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-    showNotification("User saved (Online)","success");
-  }catch(e){
-    queueUser({username,password,role,name,agency,createdAt:new Date()});
-    showNotification("User saved (Offline)","warning");
-    setStatus(false);
-  }
-};
-</script>
+<!-- Add Service Modal -->
+<div id="addServiceModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div class="modal-container" style="background:white; padding:20px; border-radius:8px; max-width:400px; width:100%;">
+    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <h2>Add Service</h2>
+      <button class="modal-close" onclick="closeAddServiceModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">×</button>
+    </div>
+    <div class="modal-body" style="margin-top:15px;">
+      <input type="text" id="newServiceInput" placeholder="Enter service provided" style="width:100%; padding:10px; margin-bottom:15px;"/>
+      <div style="display:flex; justify-content:space-between;">
+        <button class="btn btn-success" onclick="saveNewService()" style="background:#28a745; color:white; padding:6px 12px; border:none; border-radius:4px;">Save</button>
+        <button class="btn" onclick="closeAddServiceModal()" style="background:#6c757d; color:white; padding:6px 12px; border:none; border-radius:4px;">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
