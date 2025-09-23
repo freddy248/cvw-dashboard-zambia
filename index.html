@@ -2631,6 +2631,8 @@ showNotification(`Agency "${deletedAgency.name}" has been deleted`, 'success');
 
 // Add event listeners when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
+    loadAgenciesFromFirebase();
+    loadCaseRecordsFromFirebase();
     listenToCases();
     listenToUsers();
     listenToAgencies();
