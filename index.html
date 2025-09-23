@@ -2552,6 +2552,7 @@ window.addAgency = function() {
     updateAgencyGrid();
 
         updateAgencyDropdown();
+    updateEditUserAgencyDropdown();
 showNotification(`Agency "${agencyName}" added successfully`, "success");
 };
 
@@ -2624,6 +2625,7 @@ window.deleteAgency = function(agencyCode) {
             updateAgencyGrid();
             
                 updateAgencyDropdown();
+    updateEditUserAgencyDropdown();
 showNotification(`Agency "${deletedAgency.name}" has been deleted`, 'success');
         }
     }
@@ -2631,13 +2633,15 @@ showNotification(`Agency "${deletedAgency.name}" has been deleted`, 'success');
 
 // Add event listeners when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
+    listenToRoles();
     loadAgenciesFromFirebase();
     loadCaseRecordsFromFirebase();
     listenToCases();
     listenToUsers();
     listenToAgencies();
     updateAgencyDropdown();
-    console.log('CVW Dashboard loaded and ready');
+        updateEditUserAgencyDropdown();
+console.log('CVW Dashboard loaded and ready');
     
     // Setup connection monitoring
     setupConnectionMonitoring();
@@ -2707,6 +2711,40 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="btn btn-success" onclick="saveNewService()" style="background:#28a745; color:white; padding:6px 12px; border:none; border-radius:4px;">Save</button>
         <button class="btn" onclick="closeAddServiceModal()" style="background:#6c757d; color:white; padding:6px 12px; border:none; border-radius:4px;">Cancel</button>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="editUserModal" style="display:none;">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>✏️ Edit User</h2>
+      <button class="modal-close" onclick="closeEditUserModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editUserId"/>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="editUserName" class="form-input"/>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="editUserRole" class="form-input"></select>
+      </div>
+      <div class="form-group">
+        <label>Agency</label>
+        <select id="editUserAgency" class="form-input"></select>
+      </div>
+      <div class="form-group">
+        <label>New Password (leave blank to keep current)</label>
+        <input type="password" id="editUserPassword" class="form-input"/>
+      </div>
+    </div>
+    <div style="padding:20px; display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn" onclick="closeEditUserModal()" style="background:#6c757d; color:white;">Cancel</button>
+      <button class="btn btn-success" onclick="saveUserEdits()">Save Changes</button>
     </div>
   </div>
 </div>
