@@ -1356,17 +1356,20 @@ window.handleLogin = function() {
                             }
                             
                             showDashboard();
+          listenToUsers();
                             errorDiv.style.display = 'none';
                             showNotification(`Welcome, ${currentUser.name}! (Online)`, 'success');
                         })
                         .catch(error => {
                             console.warn('Could not load user profile from Firestore:', error);
                             showDashboard();
+          listenToUsers();
                             errorDiv.style.display = 'none';
                             showNotification(`Welcome, ${currentUser.name}! (Online - No Profile)`, 'success');
                         });
                 } else {
                     showDashboard();
+          listenToUsers();
                     errorDiv.style.display = 'none';
                     showNotification(`Welcome, ${currentUser.name}! (Online)`, 'success');
                 }
@@ -1391,6 +1394,7 @@ function tryOfflineLogin(username, password, errorDiv) {
         currentUser.username = username;
         currentUser.offline = true;
         showDashboard();
+          listenToUsers();
         errorDiv.style.display = 'none';
         showNotification(`Welcome, ${currentUser.name}! (Offline Demo)`, 'success');
         console.log('Offline login successful for:', username);
@@ -2133,7 +2137,14 @@ window.searchRecords = function() {
                     <span class="badge badge-${record['Record Type'].toLowerCase()}" style="margin: 0 5px;">${record['Record Type']}</span> - 
                     <strong>${record['District']}</strong>
                     <br><small style="color: #6c757d;">${record['Crime Type']} | Age: ${record['CVW Age']} | Gender: ${record['CVW Gender']} | ${record['Date Reported'].toLocaleDateString()}</small>
-                    <br><strong style="color: #28a745;">Services: ${record['Services Rendered'] || 'None'}</strong>
+                    
+      <br><strong style="color: #28a745;">Services: ${record['Services Rendered'] || 'None'}</strong>
+      ${
+        currentUser && currentUser.role === 'reporter' 
+          ? `<br><button class="btn btn-sm btn-success" onclick="openAddServiceModal('${record['cvw code']}')">+ Add Service</button>`
+          : ''
+      }
+
                 </div>
             `;
         });
@@ -2343,35 +2354,53 @@ function clearUserForm() {
 }
 
 // Enhanced users list rendering
-
 function updateUsersList() {
-  const usersList = document.getElementById("usersList");
-  if (!usersList) return;
-  usersList.innerHTML = "";
-  if (state.users && state.users.length > 0) {
-    state.users.forEach(user => {
-      const userDiv = document.createElement("div");
-      userDiv.style.cssText = "padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: white; display: flex; justify-content: space-between; align-items: center;";
-      const userData = JSON.stringify(user).replace(/"/g, '&quot;');
-      userDiv.innerHTML = `
-        <div>
-          <div style="font-weight: 600; color: #2c3e50;">${user.name}</div>
-          <div style="font-size: 0.9rem; color: #6c757d;">Email: ${user.email} | Role: ${user.role} | Agency: ${user.agency}</div>
-        </div>
-        <div>
-          ${currentUser && currentUser.role === "admin" ? `
-            <button onclick="openEditUser('${user.id}', ${userData})" class="btn btn-sm" style="background:#17a2b8; color:white; margin-right:5px;">Edit</button>
-            <button onclick="deleteUser('${user.id}')" class="btn btn-sm" style="background:#dc3545; color:white;">Delete</button>
-          ` : `<span style="color:#28a745;">Protected</span>`}
-        </div>
-      `;
-      usersList.appendChild(userDiv);
-    });
-  } else {
-    usersList.innerHTML = "<p>No users found.</p>";
-  }
-}
+    const usersList = document.getElementById('usersList');
+    if (!usersList) return;
+    
+    usersList.innerHTML = '';
 
+    // Check if we should load from Firebase or show demo users
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0 && !currentUser.offline && db) {
+        console.log('Loading users from Firebase...');
+        
+        db.collection("users").get()
+            .then(snapshot => {
+                if (snapshot.empty) {
+                    console.log('No Firebase users found, showing demo users');
+                    renderDemoUsers(usersList);
+                    return;
+                }
+                
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    const userDiv = document.createElement('div');
+                    userDiv.style.cssText = 'padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: white; display: flex; justify-content: space-between; align-items: center;';
+                    
+                    userDiv.innerHTML = `
+                        <div>
+                            <div style="font-weight: 600; color: #2c3e50;">${user.name || user.username || 'Unknown'}</div>
+                            <div style="font-size: 0.9rem; color: #6c757d;">Email: ${user.email} | Role: ${user.role}</div>
+                            <div style="font-size: 0.8rem; color: #adb5bd;">UID: ${doc.id}</div>
+                        </div>
+                        <div>
+                            ${user.email !== 'admin@cvw.org' ? `<button onclick="deleteFirebaseUser('${doc.id}', '${user.email}')" class="btn btn-sm" style="background: #dc3545; color: white;">Delete</button>` : '<span style="color: #28a745;">Protected</span>'}
+                        </div>
+                    `;
+                    
+                    usersList.appendChild(userDiv);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching Firebase users:", error);
+                showNotification("Could not fetch online users, showing offline list", "warning");
+                renderDemoUsers(usersList);
+            });
+    } else {
+        console.log('Showing demo users (offline mode)');
+        renderDemoUsers(usersList);
+    }
+}
 
 // Helper to render demo users list
 function renderDemoUsers(usersList) {
