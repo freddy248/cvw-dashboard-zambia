@@ -4,7 +4,65 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>CVW Dashboard - Zambia</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js">
+async function saveNewService() {
+    const modal = document.getElementById('addServiceModal');
+    const recordId = modal.getAttribute('data-record-id');
+    const select = document.getElementById('newServiceInput');
+    const selected = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!selected.length) {
+        showNotification('Please select at least one service', 'error');
+        return;
+    }
+
+    try {
+        if (db && !currentUser.offline) {
+            await db.collection("caseRecords").doc(recordId).update({
+                servicesRendered: firebase.firestore.FieldValue.arrayUnion(...selected),
+                lastModified: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification(`Service(s) added to ${recordId}`, 'success');
+        } else {
+            // Offline fallback
+            const localRecord = allData.find(r => r['cvw code'] === recordId);
+            if (localRecord) {
+                if (!localRecord['Services Rendered']) localRecord['Services Rendered'] = '';
+                const currentServices = localRecord['Services Rendered'].split(',').map(s => s.trim()).filter(Boolean);
+                selected.forEach(s => {
+                    if (!currentServices.includes(s)) currentServices.push(s);
+                });
+                localRecord['Services Rendered'] = currentServices.join(', ');
+            }
+            showNotification(`Service(s) saved locally for ${recordId}`, 'info');
+        }
+    } catch (error) {
+        console.error("Error saving service:", error);
+        showNotification("Error saving service. Try again.", "error");
+    }
+
+    closeAddServiceModal();
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    if (typeof searchRecords === 'function') searchRecords();
+}
+
+
+function openAddServiceModal(recordId) {
+    const modal = document.getElementById('addServiceModal');
+    if (!modal) {
+        console.error('Add Service modal not found');
+        return;
+    }
+    modal.style.display = 'flex'; // Show modal
+    modal.setAttribute('data-record-id', recordId);
+    console.log('Opening Add Service modal for record:', recordId);
+}
+function closeAddServiceModal() {
+    const modal = document.getElementById('addServiceModal');
+    if (modal) modal.style.display = 'none';
+}
+
+</script>
 <style>
         * {
             margin: 0;
@@ -1147,14 +1205,304 @@
 
 <div class="notification" id="notification"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+async function saveNewService() {
+    const modal = document.getElementById('addServiceModal');
+    const recordId = modal.getAttribute('data-record-id');
+    const select = document.getElementById('newServiceInput');
+    const selected = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!selected.length) {
+        showNotification('Please select at least one service', 'error');
+        return;
+    }
+
+    try {
+        if (db && !currentUser.offline) {
+            await db.collection("caseRecords").doc(recordId).update({
+                servicesRendered: firebase.firestore.FieldValue.arrayUnion(...selected),
+                lastModified: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification(`Service(s) added to ${recordId}`, 'success');
+        } else {
+            // Offline fallback
+            const localRecord = allData.find(r => r['cvw code'] === recordId);
+            if (localRecord) {
+                if (!localRecord['Services Rendered']) localRecord['Services Rendered'] = '';
+                const currentServices = localRecord['Services Rendered'].split(',').map(s => s.trim()).filter(Boolean);
+                selected.forEach(s => {
+                    if (!currentServices.includes(s)) currentServices.push(s);
+                });
+                localRecord['Services Rendered'] = currentServices.join(', ');
+            }
+            showNotification(`Service(s) saved locally for ${recordId}`, 'info');
+        }
+    } catch (error) {
+        console.error("Error saving service:", error);
+        showNotification("Error saving service. Try again.", "error");
+    }
+
+    closeAddServiceModal();
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    if (typeof searchRecords === 'function') searchRecords();
+}
+
+
+function openAddServiceModal(recordId) {
+    const modal = document.getElementById('addServiceModal');
+    if (!modal) {
+        console.error('Add Service modal not found');
+        return;
+    }
+    modal.style.display = 'flex'; // Show modal
+    modal.setAttribute('data-record-id', recordId);
+    console.log('Opening Add Service modal for record:', recordId);
+}
+function closeAddServiceModal() {
+    const modal = document.getElementById('addServiceModal');
+    if (modal) modal.style.display = 'none';
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js">
+async function saveNewService() {
+    const modal = document.getElementById('addServiceModal');
+    const recordId = modal.getAttribute('data-record-id');
+    const select = document.getElementById('newServiceInput');
+    const selected = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!selected.length) {
+        showNotification('Please select at least one service', 'error');
+        return;
+    }
+
+    try {
+        if (db && !currentUser.offline) {
+            await db.collection("caseRecords").doc(recordId).update({
+                servicesRendered: firebase.firestore.FieldValue.arrayUnion(...selected),
+                lastModified: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification(`Service(s) added to ${recordId}`, 'success');
+        } else {
+            // Offline fallback
+            const localRecord = allData.find(r => r['cvw code'] === recordId);
+            if (localRecord) {
+                if (!localRecord['Services Rendered']) localRecord['Services Rendered'] = '';
+                const currentServices = localRecord['Services Rendered'].split(',').map(s => s.trim()).filter(Boolean);
+                selected.forEach(s => {
+                    if (!currentServices.includes(s)) currentServices.push(s);
+                });
+                localRecord['Services Rendered'] = currentServices.join(', ');
+            }
+            showNotification(`Service(s) saved locally for ${recordId}`, 'info');
+        }
+    } catch (error) {
+        console.error("Error saving service:", error);
+        showNotification("Error saving service. Try again.", "error");
+    }
+
+    closeAddServiceModal();
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    if (typeof searchRecords === 'function') searchRecords();
+}
+
+
+function openAddServiceModal(recordId) {
+    const modal = document.getElementById('addServiceModal');
+    if (!modal) {
+        console.error('Add Service modal not found');
+        return;
+    }
+    modal.style.display = 'flex'; // Show modal
+    modal.setAttribute('data-record-id', recordId);
+    console.log('Opening Add Service modal for record:', recordId);
+}
+function closeAddServiceModal() {
+    const modal = document.getElementById('addServiceModal');
+    if (modal) modal.style.display = 'none';
+}
+
+</script>
 
 
 <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
+async function saveNewService() {
+    const modal = document.getElementById('addServiceModal');
+    const recordId = modal.getAttribute('data-record-id');
+    const select = document.getElementById('newServiceInput');
+    const selected = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!selected.length) {
+        showNotification('Please select at least one service', 'error');
+        return;
+    }
+
+    try {
+        if (db && !currentUser.offline) {
+            await db.collection("caseRecords").doc(recordId).update({
+                servicesRendered: firebase.firestore.FieldValue.arrayUnion(...selected),
+                lastModified: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification(`Service(s) added to ${recordId}`, 'success');
+        } else {
+            // Offline fallback
+            const localRecord = allData.find(r => r['cvw code'] === recordId);
+            if (localRecord) {
+                if (!localRecord['Services Rendered']) localRecord['Services Rendered'] = '';
+                const currentServices = localRecord['Services Rendered'].split(',').map(s => s.trim()).filter(Boolean);
+                selected.forEach(s => {
+                    if (!currentServices.includes(s)) currentServices.push(s);
+                });
+                localRecord['Services Rendered'] = currentServices.join(', ');
+            }
+            showNotification(`Service(s) saved locally for ${recordId}`, 'info');
+        }
+    } catch (error) {
+        console.error("Error saving service:", error);
+        showNotification("Error saving service. Try again.", "error");
+    }
+
+    closeAddServiceModal();
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    if (typeof searchRecords === 'function') searchRecords();
+}
+
+
+function openAddServiceModal(recordId) {
+    const modal = document.getElementById('addServiceModal');
+    if (!modal) {
+        console.error('Add Service modal not found');
+        return;
+    }
+    modal.style.display = 'flex'; // Show modal
+    modal.setAttribute('data-record-id', recordId);
+    console.log('Opening Add Service modal for record:', recordId);
+}
+function closeAddServiceModal() {
+    const modal = document.getElementById('addServiceModal');
+    if (modal) modal.style.display = 'none';
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js">
+async function saveNewService() {
+    const modal = document.getElementById('addServiceModal');
+    const recordId = modal.getAttribute('data-record-id');
+    const select = document.getElementById('newServiceInput');
+    const selected = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!selected.length) {
+        showNotification('Please select at least one service', 'error');
+        return;
+    }
+
+    try {
+        if (db && !currentUser.offline) {
+            await db.collection("caseRecords").doc(recordId).update({
+                servicesRendered: firebase.firestore.FieldValue.arrayUnion(...selected),
+                lastModified: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification(`Service(s) added to ${recordId}`, 'success');
+        } else {
+            // Offline fallback
+            const localRecord = allData.find(r => r['cvw code'] === recordId);
+            if (localRecord) {
+                if (!localRecord['Services Rendered']) localRecord['Services Rendered'] = '';
+                const currentServices = localRecord['Services Rendered'].split(',').map(s => s.trim()).filter(Boolean);
+                selected.forEach(s => {
+                    if (!currentServices.includes(s)) currentServices.push(s);
+                });
+                localRecord['Services Rendered'] = currentServices.join(', ');
+            }
+            showNotification(`Service(s) saved locally for ${recordId}`, 'info');
+        }
+    } catch (error) {
+        console.error("Error saving service:", error);
+        showNotification("Error saving service. Try again.", "error");
+    }
+
+    closeAddServiceModal();
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    if (typeof searchRecords === 'function') searchRecords();
+}
+
+
+function openAddServiceModal(recordId) {
+    const modal = document.getElementById('addServiceModal');
+    if (!modal) {
+        console.error('Add Service modal not found');
+        return;
+    }
+    modal.style.display = 'flex'; // Show modal
+    modal.setAttribute('data-record-id', recordId);
+    console.log('Opening Add Service modal for record:', recordId);
+}
+function closeAddServiceModal() {
+    const modal = document.getElementById('addServiceModal');
+    if (modal) modal.style.display = 'none';
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js">
+async function saveNewService() {
+    const modal = document.getElementById('addServiceModal');
+    const recordId = modal.getAttribute('data-record-id');
+    const select = document.getElementById('newServiceInput');
+    const selected = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!selected.length) {
+        showNotification('Please select at least one service', 'error');
+        return;
+    }
+
+    try {
+        if (db && !currentUser.offline) {
+            await db.collection("caseRecords").doc(recordId).update({
+                servicesRendered: firebase.firestore.FieldValue.arrayUnion(...selected),
+                lastModified: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification(`Service(s) added to ${recordId}`, 'success');
+        } else {
+            // Offline fallback
+            const localRecord = allData.find(r => r['cvw code'] === recordId);
+            if (localRecord) {
+                if (!localRecord['Services Rendered']) localRecord['Services Rendered'] = '';
+                const currentServices = localRecord['Services Rendered'].split(',').map(s => s.trim()).filter(Boolean);
+                selected.forEach(s => {
+                    if (!currentServices.includes(s)) currentServices.push(s);
+                });
+                localRecord['Services Rendered'] = currentServices.join(', ');
+            }
+            showNotification(`Service(s) saved locally for ${recordId}`, 'info');
+        }
+    } catch (error) {
+        console.error("Error saving service:", error);
+        showNotification("Error saving service. Try again.", "error");
+    }
+
+    closeAddServiceModal();
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    if (typeof searchRecords === 'function') searchRecords();
+}
+
+
+function openAddServiceModal(recordId) {
+    const modal = document.getElementById('addServiceModal');
+    if (!modal) {
+        console.error('Add Service modal not found');
+        return;
+    }
+    modal.style.display = 'flex'; // Show modal
+    modal.setAttribute('data-record-id', recordId);
+    console.log('Opening Add Service modal for record:', recordId);
+}
+function closeAddServiceModal() {
+    const modal = document.getElementById('addServiceModal');
+    if (modal) modal.style.display = 'none';
+}
+
+</script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyBo0jRzfh3DVNdCkPjXXgwvi2cfacXE1Ok",
@@ -1167,6 +1515,64 @@
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
+
+async function saveNewService() {
+    const modal = document.getElementById('addServiceModal');
+    const recordId = modal.getAttribute('data-record-id');
+    const select = document.getElementById('newServiceInput');
+    const selected = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!selected.length) {
+        showNotification('Please select at least one service', 'error');
+        return;
+    }
+
+    try {
+        if (db && !currentUser.offline) {
+            await db.collection("caseRecords").doc(recordId).update({
+                servicesRendered: firebase.firestore.FieldValue.arrayUnion(...selected),
+                lastModified: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification(`Service(s) added to ${recordId}`, 'success');
+        } else {
+            // Offline fallback
+            const localRecord = allData.find(r => r['cvw code'] === recordId);
+            if (localRecord) {
+                if (!localRecord['Services Rendered']) localRecord['Services Rendered'] = '';
+                const currentServices = localRecord['Services Rendered'].split(',').map(s => s.trim()).filter(Boolean);
+                selected.forEach(s => {
+                    if (!currentServices.includes(s)) currentServices.push(s);
+                });
+                localRecord['Services Rendered'] = currentServices.join(', ');
+            }
+            showNotification(`Service(s) saved locally for ${recordId}`, 'info');
+        }
+    } catch (error) {
+        console.error("Error saving service:", error);
+        showNotification("Error saving service. Try again.", "error");
+    }
+
+    closeAddServiceModal();
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    if (typeof searchRecords === 'function') searchRecords();
+}
+
+
+function openAddServiceModal(recordId) {
+    const modal = document.getElementById('addServiceModal');
+    if (!modal) {
+        console.error('Add Service modal not found');
+        return;
+    }
+    modal.style.display = 'flex'; // Show modal
+    modal.setAttribute('data-record-id', recordId);
+    console.log('Opening Add Service modal for record:', recordId);
+}
+function closeAddServiceModal() {
+    const modal = document.getElementById('addServiceModal');
+    if (modal) modal.style.display = 'none';
+}
+
 </script>
 
 <script>
@@ -2706,23 +3112,68 @@ console.log('CVW Dashboard loaded and ready');
     // Focus on username field
     document.getElementById('username').focus();
 });
+
+async function saveNewService() {
+    const modal = document.getElementById('addServiceModal');
+    const recordId = modal.getAttribute('data-record-id');
+    const select = document.getElementById('newServiceInput');
+    const selected = Array.from(select.selectedOptions).map(o => o.value);
+
+    if (!selected.length) {
+        showNotification('Please select at least one service', 'error');
+        return;
+    }
+
+    try {
+        if (db && !currentUser.offline) {
+            await db.collection("caseRecords").doc(recordId).update({
+                servicesRendered: firebase.firestore.FieldValue.arrayUnion(...selected),
+                lastModified: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showNotification(`Service(s) added to ${recordId}`, 'success');
+        } else {
+            // Offline fallback
+            const localRecord = allData.find(r => r['cvw code'] === recordId);
+            if (localRecord) {
+                if (!localRecord['Services Rendered']) localRecord['Services Rendered'] = '';
+                const currentServices = localRecord['Services Rendered'].split(',').map(s => s.trim()).filter(Boolean);
+                selected.forEach(s => {
+                    if (!currentServices.includes(s)) currentServices.push(s);
+                });
+                localRecord['Services Rendered'] = currentServices.join(', ');
+            }
+            showNotification(`Service(s) saved locally for ${recordId}`, 'info');
+        }
+    } catch (error) {
+        console.error("Error saving service:", error);
+        showNotification("Error saving service. Try again.", "error");
+    }
+
+    closeAddServiceModal();
+    if (typeof refreshDashboardData === 'function') refreshDashboardData();
+    if (typeof searchRecords === 'function') searchRecords();
+}
+
+
+function openAddServiceModal(recordId) {
+    const modal = document.getElementById('addServiceModal');
+    if (!modal) {
+        console.error('Add Service modal not found');
+        return;
+    }
+    modal.style.display = 'flex'; // Show modal
+    modal.setAttribute('data-record-id', recordId);
+    console.log('Opening Add Service modal for record:', recordId);
+}
+function closeAddServiceModal() {
+    const modal = document.getElementById('addServiceModal');
+    if (modal) modal.style.display = 'none';
+}
+
 </script>
 
 
-<!-- Add Service Modal -->
-<div id="addServiceModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-  <div class="modal-container" style="background:white; padding:20px; border-radius:8px; max-width:400px; width:100%;">
-    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
-      <h2>Add Service</h2>
-      <button class="modal-close" onclick="closeAddServiceModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">×</button>
-    </div>
-    <div class="modal-body" style="margin-top:15px;">
-      <input type="text" id="newServiceInput" placeholder="Enter service provided" style="width:100%; padding:10px; margin-bottom:15px;"/>
-      <div style="display:flex; justify-content:space-between;">
-        <button class="btn btn-success" onclick="saveNewService()" style="background:#28a745; color:white; padding:6px 12px; border:none; border-radius:4px;">Save</button>
-        <button class="btn" onclick="closeAddServiceModal()" style="background:#6c757d; color:white; padding:6px 12px; border:none; border-radius:4px;">Cancel</button>
-      </div>
-    </div>
+
   </div>
 </div>
 
@@ -2756,6 +3207,40 @@ console.log('CVW Dashboard loaded and ready');
     <div style="padding:20px; display:flex; justify-content:flex-end; gap:10px;">
       <button class="btn" onclick="closeEditUserModal()" style="background:#6c757d; color:white;">Cancel</button>
       <button class="btn btn-success" onclick="saveUserEdits()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Add Service Modal -->
+<div id="addServiceModal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div class="modal-container" style="background:white; padding:20px; border-radius:8px; max-width:400px; width:100%;">
+    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <h2>Add Service</h2>
+      <button class="modal-close" onclick="closeAddServiceModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">×</button>
+    </div>
+    <div class="modal-body" style="margin-top:15px;">
+      <label for="newServiceInput" style="font-weight:bold; margin-bottom:8px; display:block;">Select Service</label>
+      
+<select id="newServiceInput" multiple style="width:100%; padding:10px; margin-bottom:15px; height:150px;">
+  <option value="MEDICAL REPORT">Medical Report</option>
+  <option value="COUNSELLING">Counselling</option>
+  <option value="LEGAL AID">Legal Aid</option>
+  <option value="PSYCHOSOCIAL SUPPORT">Psychosocial Support</option>
+  <option value="SHELTER">Shelter</option>
+  <option value="MEDICAL + COUNSELLING">Medical + Counselling</option>
+  <option value="LEGAL + COUNSELLING">Legal + Counselling</option>
+  <option value="REFERRAL">Referral</option>
+  <option value="FOLLOW-UP">Follow-up</option>
+  <option value="REHABILITATION">Rehabilitation</option>
+  <option value="FAMILY SUPPORT">Family Support</option>
+  <option value="EMERGENCY CARE">Emergency Care</option>
+</select>
+
+      <div style="display:flex; justify-content:space-between;">
+        <button class="btn btn-success" onclick="saveNewService()" style="background:#28a745; color:white; padding:6px 12px; border:none; border-radius:4px;">Save</button>
+        <button class="btn" onclick="closeAddServiceModal()" style="background:#6c757d; color:white; padding:6px 12px; border:none; border-radius:4px;">Cancel</button>
+      </div>
     </div>
   </div>
 </div>
